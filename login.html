@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>منجز — تسجيل الدخول</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--green:#22a34e;--dark:#0d1f14;--muted:#5a6e5a;--border:#d0ddd0;--font:'Tajawal',sans-serif;}
+body{background:linear-gradient(135deg,#f0f7f2,#e8f5ec);min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:var(--font);padding:20px;}
+.card{background:#fff;border-radius:24px;padding:48px 40px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(10,60,20,0.12);}
+.logo{text-align:center;margin-bottom:32px;}
+.logo h1{font-size:40px;font-weight:900;color:var(--dark);}
+.logo h1 span{color:var(--green);}
+.logo p{font-size:12px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:4px;}
+h2{font-size:20px;font-weight:700;margin-bottom:6px;}
+.sub{font-size:13px;color:var(--muted);margin-bottom:28px;}
+.field{margin-bottom:18px;}
+label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;}
+input{width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:12px;font-family:var(--font);font-size:15px;outline:none;transition:border-color .2s;}
+input:focus{border-color:var(--green);}
+.btn{width:100%;padding:15px;background:var(--dark);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;font-family:var(--font);cursor:pointer;transition:all .3s;margin-top:8px;}
+.btn:hover:not(:disabled){background:var(--green);transform:translateY(-1px);}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+.err{background:#fee2e2;color:#dc2626;border-radius:10px;padding:12px 16px;font-size:13px;margin-bottom:16px;display:none;}
+.err.show{display:block;}
+.note{text-align:center;font-size:11px;color:var(--muted);margin-top:20px;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <h1>م<span>ن</span>جز</h1>
+    <p>نظام تحليل المناقصات</p>
+  </div>
+  <h2>أهلاً بك 👋</h2>
+  <p class="sub">سجّل دخولك للوصول إلى نظام منجز</p>
+  <div class="err" id="err"></div>
+  <div class="field"><label>البريد الإلكتروني</label><input type="email" id="email" placeholder="example@company.com"></div>
+  <div class="field"><label>كلمة السر</label><input type="password" id="pass" placeholder="••••••••"></div>
+  <button class="btn" id="btn" onclick="login()">دخول</button>
+  <p class="note">تواصل مع المدير لإنشاء حسابك</p>
+</div>
+<script>
+const API=window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1'?'http://127.0.0.1:8000':window.location.origin;
+if(localStorage.getItem('munjaz_token')){window.location.href=localStorage.getItem('munjaz_role')==='admin'?'/admin':'/dashboard';}
+document.getElementById('pass').addEventListener('keydown',e=>{if(e.key==='Enter')login();});
+async function login(){
+  const email=document.getElementById('email').value.trim();
+  const pass=document.getElementById('pass').value;
+  const btn=document.getElementById('btn');
+  const err=document.getElementById('err');
+  err.classList.remove('show');
+  if(!email||!pass){showErr('يرجى إدخال البريد وكلمة السر');return;}
+  btn.disabled=true;btn.textContent='جارٍ الدخول...';
+  try{
+    const r=await fetch(`${API}/auth/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pass})});
+    const d=await r.json();
+    if(!r.ok){showErr(d.detail||'خطأ');return;}
+    localStorage.setItem('munjaz_token',d.token);
+    localStorage.setItem('munjaz_role',d.role);
+    localStorage.setItem('munjaz_name',d.name);
+    window.location.href=d.role==='admin'?'/admin':'/dashboard';
+  }catch{showErr('تعذّر الاتصال');}
+  finally{btn.disabled=false;btn.textContent='دخول';}
+}
+function showErr(m){const e=document.getElementById('err');e.textContent=m;e.classList.add('show');}
+</script>
+</body>
+</html>

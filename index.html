@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>منجز — لوحة المستخدم</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--bg:#f4f6f5;--white:#fff;--dark:#0d1f14;--green:#22a34e;--green2:#1a7a3a;--green3:#d4edda;--green4:#eaf5ed;--border:#dce8de;--muted:#6b7f6b;--red:#dc2626;--yellow:#d97706;--blue:#2563eb;--font:'Tajawal',sans-serif;--mono:'JetBrains Mono',monospace;}
+body{background:var(--bg);color:var(--dark);font-family:var(--font);min-height:100vh;}
+.layout{display:grid;grid-template-columns:230px 1fr;min-height:100vh;}
+
+/* Sidebar */
+.sidebar{background:linear-gradient(160deg,#0b1f12,#0f2a18 60%,#0a1f12);padding:20px 14px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.logo{padding:4px 8px 20px;border-bottom:1px solid rgba(34,163,78,.15);margin-bottom:10px;}
+.logo h2{font-size:24px;font-weight:900;color:#fff;}
+.logo h2 span{color:var(--green);}
+.logo small{display:block;font-size:9px;color:rgba(255,255,255,.2);letter-spacing:3px;text-transform:uppercase;margin-top:3px;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:9px;font-size:13.5px;font-weight:500;cursor:pointer;color:rgba(255,255,255,.4);border:1px solid transparent;transition:all .15s;margin-bottom:1px;}
+.nav-item:hover{background:rgba(255,255,255,.05);color:rgba(255,255,255,.75);}
+.nav-item.active{background:rgba(34,163,78,.18);color:#fff;border-color:rgba(34,163,78,.35);}
+.nav-item .ni{font-size:15px;width:20px;text-align:center;}
+.sidebar-footer{margin-top:auto;padding-top:14px;border-top:1px solid rgba(255,255,255,.07);}
+.user-pill{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.05);border-radius:9px;margin-bottom:8px;}
+.user-av{width:34px;height:34px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:14px;flex-shrink:0;}
+.user-name{font-size:13px;color:rgba(255,255,255,.8);font-weight:600;}
+.user-role{font-size:10px;color:var(--green);}
+.logout-btn{width:100%;padding:9px;background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.2);color:#f87171;border-radius:8px;font-family:var(--font);font-size:13px;cursor:pointer;transition:all .2s;}
+.logout-btn:hover{background:rgba(220,38,38,.18);}
+
+/* Main */
+.main{padding:28px 32px;overflow-y:auto;}
+.page{display:none;animation:fadeUp .3s ease;}
+.page.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;}
+.page-title h1{font-size:22px;font-weight:800;}
+.page-title p{font-size:13px;color:var(--muted);margin-top:3px;}
+
+/* Cards & Tables */
+.card{background:var(--white);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:20px;}
+.card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.card-header h3{font-size:15px;font-weight:700;}
+.tbl-wrap{overflow-x:auto;}
+.table{width:100%;border-collapse:collapse;font-size:13.5px;}
+.table th{text-align:right;padding:10px 16px;background:#f8faf8;color:var(--muted);font-size:11px;letter-spacing:.5px;font-weight:700;border-bottom:1px solid var(--border);white-space:nowrap;}
+.table td{padding:12px 16px;border-bottom:1px solid #f0f4f0;vertical-align:middle;}
+.table tr:last-child td{border-bottom:none;}
+.table tbody tr:hover td{background:#f8faf8;}
+.td-mono{font-family:var(--mono);font-size:12px;}
+.td-muted{font-size:12px;color:var(--muted);}
+
+/* Badges */
+.badge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.5px;padding:3px 10px;border-radius:6px;font-family:var(--mono);}
+.b-active,.b-published,.b-PROCEED{background:#d4edda;color:#1a7a3a;}
+.b-inactive,.b-RISK,.b-terminated{background:#fee2e2;color:#dc2626;}
+.b-on_leave,.b-CLARIFY{background:#fef3c7;color:#92400e;}
+.b-corporate{background:#dbeafe;color:#1d4ed8;}
+.b-government{background:#ede9fe;color:#5b21b6;}
+.b-individual{background:#d4edda;color:#1a7a3a;}
+.b-ngo{background:#fef3c7;color:#92400e;}
+.b-financial{background:#fef3c7;color:#92400e;}
+.b-legal{background:#fee2e2;color:#dc2626;}
+.b-hr{background:#dbeafe;color:#1d4ed8;}
+.b-technical{background:#ede9fe;color:#5b21b6;}
+.b-general,.b-operational,.b-strategic{background:#f3f4f6;color:#4b5563;}
+.b-urgent{background:#fee2e2;color:#dc2626;}
+.imp-critical{background:#fee2e2;color:#dc2626;}
+.imp-high{background:#fef3c7;color:#92400e;}
+.imp-normal{background:#f3f4f6;color:#4b5563;}
+.imp-low{background:#d4edda;color:#1a7a3a;}
+
+/* Buttons */
+.btn{padding:8px 18px;border:none;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:5px;}
+.btn-primary{background:var(--dark);color:#fff;}
+.btn-primary:hover{background:var(--green2);}
+.btn-green{background:var(--green);color:#fff;}
+.btn-green:hover{background:var(--green2);}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}
+.btn-ghost:hover{background:var(--bg);}
+.btn-sm{padding:5px 12px;font-size:12px;}
+
+/* Upload Zone */
+.upload-zone{border:2px dashed var(--border);border-radius:16px;padding:48px 32px;text-align:center;cursor:pointer;transition:all .2s;background:var(--white);}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--green);background:var(--green4);}
+.upload-zone .uz-icon{font-size:40px;display:block;margin-bottom:12px;}
+.upload-zone h3{font-size:16px;font-weight:700;margin-bottom:6px;}
+.upload-zone p{font-size:13px;color:var(--muted);}
+#fileInput{display:none;}
+
+/* Progress */
+.progress-wrap{background:#f0f4f0;border-radius:100px;height:8px;overflow:hidden;margin:8px 0;}
+.progress-bar{height:100%;background:linear-gradient(90deg,var(--green),var(--green2));border-radius:100px;transition:width .4s;}
+
+/* Analysis Results */
+.verdict-banner{border-radius:14px;padding:20px 24px;display:flex;align-items:center;gap:16px;margin-bottom:20px;}
+.vb-green{background:linear-gradient(135deg,#d4edda,#eaf5ed);border:1px solid #86efac;}
+.vb-yellow{background:linear-gradient(135deg,#fef3c7,#fffbeb);border:1px solid #fcd34d;}
+.vb-red{background:linear-gradient(135deg,#fee2e2,#fff5f5);border:1px solid #fca5a5;}
+.vb-icon{font-size:36px;flex-shrink:0;}
+.vb-title{font-size:20px;font-weight:900;}
+.vb-exp{font-size:13px;color:var(--muted);margin-top:4px;}
+.score-ring{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;font-family:var(--mono);flex-shrink:0;margin-right:auto;}
+.sr-green{background:#d4edda;color:var(--green2);}
+.sr-yellow{background:#fef3c7;color:#92400e;}
+.sr-red{background:#fee2e2;color:var(--red);}
+
+.stats-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;}
+.s-chip{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:10px 16px;text-align:center;min-width:90px;}
+.s-chip .n{font-size:22px;font-weight:900;font-family:var(--mono);}
+.s-chip .l{font-size:10px;color:var(--muted);margin-top:2px;}
+
+/* Requirements */
+.req-item{padding:12px 16px;border-bottom:1px solid #f0f4f0;display:flex;gap:12px;align-items:flex-start;}
+.req-item:last-child{border-bottom:none;}
+.req-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.req-mandatory{background:var(--red);}
+.req-optional{background:var(--muted);}
+.req-text strong{font-size:13px;font-weight:700;}
+.req-text p{font-size:12px;color:var(--muted);margin-top:2px;}
+
+/* Chat */
+.chat-box{height:320px;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:var(--bg);border-radius:0 0 14px 14px;}
+.msg{max-width:80%;padding:10px 14px;border-radius:12px;font-size:13.5px;line-height:1.6;}
+.msg-user{background:var(--dark);color:#fff;align-self:flex-end;border-bottom-left-radius:4px;}
+.msg-ai{background:var(--white);border:1px solid var(--border);align-self:flex-start;border-bottom-right-radius:4px;}
+.chat-input-row{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--border);}
+.chat-input{flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:9px;font-family:var(--font);font-size:14px;outline:none;}
+.chat-input:focus{border-color:var(--green);}
+
+/* Disclosure */
+.disc-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:12px;transition:box-shadow .2s;cursor:pointer;}
+.disc-card:hover{box-shadow:0 4px 16px rgba(10,60,20,.08);}
+.disc-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px;}
+.disc-card-title{font-size:15px;font-weight:700;}
+.disc-card-meta{font-size:11px;color:var(--muted);margin-top:4px;}
+.disc-card-summary{font-size:13px;color:var(--muted);line-height:1.5;}
+
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(3px);padding:20px;}
+.modal-overlay.show{display:flex;}
+.modal{background:#fff;border-radius:18px;padding:28px;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;animation:mIn .28s ease;}
+@keyframes mIn{from{opacity:0;transform:scale(.93)}to{opacity:1;transform:none}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.modal-header h3{font-size:18px;font-weight:800;}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);}
+.disc-full{background:var(--bg);border-radius:10px;padding:16px;font-size:14px;line-height:1.8;white-space:pre-wrap;max-height:280px;overflow-y:auto;}
+
+/* Empty */
+.empty-state{text-align:center;padding:48px 20px;color:var(--muted);}
+.empty-state .ei{font-size:44px;display:block;margin-bottom:12px;opacity:.5;}
+
+/* Filter */
+.search-bar{padding:8px 14px;border:1.5px solid var(--border);border-radius:9px;font-family:var(--font);font-size:13px;outline:none;transition:border-color .2s;}
+.search-bar:focus{border-color:var(--green);}
+.filter-select{padding:8px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:var(--font);font-size:13px;outline:none;background:var(--white);}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--dark);color:#fff;padding:12px 22px;border-radius:12px;font-size:13px;font-weight:600;z-index:9999;opacity:0;pointer-events:none;transition:opacity .3s;}
+.toast.show{opacity:1;}
+.toast.error{background:#dc2626;}
+
+/* Tag pills */
+.tag-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+.tag{background:var(--bg);border:1px solid var(--border);border-radius:6px;font-size:10px;padding:2px 8px;color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <div class="logo"><h2>م<span>ن</span>جز</h2><small>نظام مؤسسي v2.0</small></div>
+  <div class="nav-item active" onclick="showPage('dashboard')"><span class="ni">🏠</span> الرئيسية</div>
+  <div class="nav-item" onclick="showPage('disclosures')"><span class="ni">📢</span> الإفصاحات</div>
+  <div class="nav-item" onclick="showPage('clients')"><span class="ni">🤝</span> دليل العملاء</div>
+  <div class="nav-item" onclick="showPage('analyze')"><span class="ni">📋</span> تحليل المناقصات</div>
+  <div class="nav-item" onclick="showPage('history')"><span class="ni">📂</span> سجل التحليلات</div>
+  <div class="sidebar-footer">
+    <div class="user-pill">
+      <div class="user-av" id="userInit">م</div>
+      <div><div class="user-name" id="userName">—</div><div class="user-role" id="userRole">—</div></div>
+    </div>
+    <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
+  </div>
+</aside>
+
+<main class="main">
+
+<!-- ═══ DASHBOARD ═══ -->
+<div class="page active" id="page-dashboard">
+  <div class="page-header">
+    <div class="page-title"><h1 id="welcomeMsg">مرحباً 👋</h1><p>نظرة سريعة على أحدث المستجدات</p></div>
+    <button class="btn btn-green" onclick="showPage('analyze')">＋ تحليل مناقصة جديدة</button>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+    <div class="card">
+      <div class="card-header"><h3>📢 آخر الإفصاحات</h3><button class="btn btn-ghost btn-sm" onclick="showPage('disclosures')">عرض الكل</button></div>
+      <div id="dashDisclosures" style="padding:8px 0;"></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h3>📋 آخر تحليلاتك</h3><button class="btn btn-ghost btn-sm" onclick="showPage('history')">عرض الكل</button></div>
+      <div class="tbl-wrap">
+        <table class="table">
+          <thead><tr><th>الملف</th><th>القرار</th><th>الدرجة</th></tr></thead>
+          <tbody id="dashAnalyses"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ DISCLOSURES ═══ -->
+<div class="page" id="page-disclosures">
+  <div class="page-header">
+    <div class="page-title"><h1>📢 الإفصاحات</h1><p>الإعلانات والإفصاحات المؤسسية</p></div>
+    <div style="display:flex;gap:8px;">
+      <select class="filter-select" onchange="filterDisc(this.value)">
+        <option value="">كل الفئات</option>
+        <option value="financial">مالي</option>
+        <option value="operational">تشغيلي</option>
+        <option value="legal">قانوني</option>
+        <option value="hr">موارد بشرية</option>
+        <option value="technical">تقني</option>
+        <option value="strategic">استراتيجي</option>
+        <option value="urgent">عاجل</option>
+        <option value="general">عام</option>
+      </select>
+    </div>
+  </div>
+  <div id="discList"></div>
+</div>
+
+<!-- ═══ CLIENTS ═══ -->
+<div class="page" id="page-clients">
+  <div class="page-header">
+    <div class="page-title"><h1>🤝 دليل العملاء</h1><p>بيانات العملاء والشركاء</p></div>
+    <input class="search-bar" placeholder="🔍 بحث..." oninput="filterClientView(this.value)" style="width:220px">
+  </div>
+  <div class="card">
+    <div class="tbl-wrap">
+    <table class="table">
+      <thead><tr><th>الشركة</th><th>النوع</th><th>القطاع</th><th>جهة التواصل</th><th>الحالة</th></tr></thead>
+      <tbody id="clientViewTbody"></tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ANALYZE ═══ -->
+<div class="page" id="page-analyze">
+  <div class="page-header">
+    <div class="page-title"><h1>📋 تحليل المناقصات</h1><p>ارفع ملف PDF لتحليله بالذكاء الاصطناعي</p></div>
+  </div>
+  <div id="uploadSection">
+    <div class="upload-zone" onclick="document.getElementById('fileInput').click()" id="uploadZone"
+      ondragover="event.preventDefault();this.classList.add('drag')"
+      ondragleave="this.classList.remove('drag')"
+      ondrop="handleDrop(event)">
+      <span class="uz-icon">📄</span>
+      <h3>اسحب ملف PDF هنا أو انقر للاختيار</h3>
+      <p>يتم تحليل الملف بالكامل بالذكاء الاصطناعي — متطلبات، مواعيد، ثغرات، وأسئلة استيضاح</p>
+    </div>
+    <input type="file" id="fileInput" accept=".pdf" onchange="uploadFile(this.files[0])">
+    <div id="uploadProgress" style="display:none;margin-top:16px;" class="card" >
+      <div style="padding:20px 24px;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:8px;" id="progressLabel">جارٍ التحميل...</div>
+        <div class="progress-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;" id="progressSub"></div>
+      </div>
+    </div>
+  </div>
+  <div id="resultsSection" style="display:none;"></div>
+</div>
+
+<!-- ═══ HISTORY ═══ -->
+<div class="page" id="page-history">
+  <div class="page-header">
+    <div class="page-title"><h1>📂 سجل التحليلات</h1><p>جميع تحليلاتك السابقة</p></div>
+  </div>
+  <div class="card">
+    <div class="tbl-wrap">
+    <table class="table">
+      <thead><tr><th>الملف</th><th>الصفحات</th><th>القرار</th><th>الدرجة</th><th>التاريخ</th></tr></thead>
+      <tbody id="historyTbody"></tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<!-- Disclosure Detail Modal -->
+<div class="modal-overlay" id="discModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <h3 id="dm-title"></h3>
+        <div style="display:flex;gap:6px;margin-top:6px;" id="dm-badges"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('discModal')">✕</button>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px;" id="dm-meta"></div>
+    <div class="disc-full" id="dm-content"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1'?'http://127.0.0.1:8000':window.location.origin;
+const token = localStorage.getItem('munjaz_token');
+const H = {'Authorization':'Bearer '+token};
+
+if(!token){window.location.href='/';}
+
+const userName = localStorage.getItem('munjaz_name')||'مستخدم';
+const userRole = localStorage.getItem('munjaz_role')||'user';
+document.getElementById('userName').textContent = userName;
+document.getElementById('userInit').textContent = userName[0]||'م';
+document.getElementById('userRole').textContent = {admin:'مدير',manager:'مشرف',user:'مستخدم'}[userRole]||userRole;
+document.getElementById('welcomeMsg').textContent = 'مرحباً، '+userName+' 👋';
+
+let allDiscs=[], allClients=[];
+let currentSession=null;
+
+async function init(){
+  await loadDashboard();
+}
+
+// ── DASHBOARD ──
+async function loadDashboard(){
+  const [discs, analyses] = await Promise.all([
+    fetch(`${API}/disclosures/?published_only=true`,{headers:H}).then(r=>r.json()).catch(()=>[]),
+    fetch(`${API}/analyses/`,{headers:H}).then(r=>r.json()).catch(()=>[])
+  ]);
+  // Latest 4 disclosures
+  const dd = document.getElementById('dashDisclosures');
+  const latest = discs.slice(0,4);
+  if(!latest.length){dd.innerHTML='<div class="empty-state"><span class="ei">📭</span><p>لا توجد إفصاحات</p></div>';} 
+  else dd.innerHTML = latest.map(d=>`
+    <div class="disc-card" onclick="openDiscModal('${d.id}')">
+      <div class="disc-card-top">
+        <div><div class="disc-card-title">${d.title}</div><div class="disc-card-meta">${formatDate(d.created_at)}</div></div>
+        <div style="display:flex;gap:4px;"><span class="badge b-${d.category}">${discCatAr(d.category)}</span><span class="badge imp-${d.importance}">${discImpAr(d.importance)}</span></div>
+      </div>
+      ${d.summary?`<div class="disc-card-summary">${d.summary}</div>`:''}
+    </div>`).join('');
+  // Last 5 analyses
+  const ta = document.getElementById('dashAnalyses');
+  const mine = analyses.slice(0,5);
+  if(!mine.length){ta.innerHTML='<tr><td colspan="3"><div class="empty-state"><span class="ei">📂</span><p>لا توجد تحليلات</p></div></td></tr>';}
+  else ta.innerHTML = mine.map(a=>`<tr>
+    <td><strong style="font-size:12px">${a.filename}</strong></td>
+    <td><span class="badge b-${(a.verdict||'').toUpperCase()}">${verdictAr(a.verdict)}</span></td>
+    <td><span style="font-family:var(--mono);font-weight:700;color:${scoreColor(a.score)}">${a.score||0}</span></td>
+  </tr>`).join('');
+}
+
+// ── DISCLOSURES ──
+async function loadDisclosures(){
+  const r = await fetch(`${API}/disclosures/?published_only=true`,{headers:H}).then(r=>r.json()).catch(()=>[]);
+  allDiscs=r; renderDiscList(r);
+}
+function renderDiscList(discs){
+  const el=document.getElementById('discList');
+  if(!discs.length){el.innerHTML='<div class="empty-state"><span class="ei">📢</span><p>لا توجد إفصاحات منشورة</p></div>';return;}
+  el.innerHTML=discs.map(d=>`
+    <div class="disc-card" onclick="openDiscModal('${d.id}')">
+      <div class="disc-card-top">
+        <div>
+          <div class="disc-card-title">${d.title}</div>
+          <div class="disc-card-meta">${d.profiles?.full_name||'—'} • ${formatDate(d.created_at)} • 👁 ${d.views_count||0}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;">
+          <span class="badge b-${d.category}">${discCatAr(d.category)}</span>
+          <span class="badge imp-${d.importance}">${discImpAr(d.importance)}</span>
+        </div>
+      </div>
+      ${d.summary?`<div class="disc-card-summary">${d.summary}</div>`:''}
+    </div>`).join('');
+}
+function filterDisc(cat){renderDiscList(cat?allDiscs.filter(d=>d.category===cat):allDiscs);}
+async function openDiscModal(did){
+  const d = await fetch(`${API}/disclosures/${did}`,{headers:H}).then(r=>r.json()).catch(()=>null);
+  if(!d)return;
+  document.getElementById('dm-title').textContent=d.title;
+  document.getElementById('dm-badges').innerHTML=`<span class="badge b-${d.category}">${discCatAr(d.category)}</span><span class="badge imp-${d.importance}">${discImpAr(d.importance)}</span>`;
+  document.getElementById('dm-meta').textContent=`بواسطة: ${d.profiles?.full_name||'—'} • ${formatDate(d.created_at)}`;
+  document.getElementById('dm-content').textContent=d.content;
+  document.getElementById('discModal').classList.add('show');
+}
+
+// ── CLIENTS (view only) ──
+async function loadClients(){
+  const r=await fetch(`${API}/clients/?status=active`,{headers:H}).then(r=>r.json()).catch(()=>[]);
+  allClients=r; renderClientView(r);
+}
+function renderClientView(clients){
+  const tb=document.getElementById('clientViewTbody');
+  if(!clients.length){tb.innerHTML='<tr><td colspan="5"><div class="empty-state"><span class="ei">🤝</span><p>لا يوجد عملاء</p></div></td></tr>';return;}
+  tb.innerHTML=clients.map(c=>`<tr>
+    <td><strong>${c.company_name}</strong><br><span class="td-mono" style="font-size:11px">${c.client_code}</span></td>
+    <td><span class="badge b-${c.client_type}">${clientTypeAr(c.client_type)}</span></td>
+    <td class="td-muted">${c.industry||'—'}</td>
+    <td>${c.contact_name||'—'}<br><span class="td-muted">${c.contact_phone||''}</span></td>
+    <td><span class="badge b-${c.status}">${clientStatusAr(c.status)}</span></td>
+  </tr>`).join('');
+}
+function filterClientView(q){renderClientView(allClients.filter(c=>c.company_name.includes(q)||c.client_code.includes(q)||(c.contact_name||'').includes(q)));}
+
+// ── ANALYZE ──
+function handleDrop(e){
+  e.preventDefault();
+  document.getElementById('uploadZone').classList.remove('drag');
+  const f=e.dataTransfer.files[0];
+  if(f&&f.name.endsWith('.pdf')) uploadFile(f);
+  else toast('ملفات PDF فقط','error');
+}
+
+async function uploadFile(file){
+  if(!file)return;
+  const section=document.getElementById('uploadSection');
+  const prog=document.getElementById('uploadProgress');
+  const bar=document.getElementById('progressBar');
+  const label=document.getElementById('progressLabel');
+  const sub=document.getElementById('progressSub');
+  prog.style.display='block';
+  const steps=[
+    [15,'جارٍ رفع الملف...','اتصال آمن بالخادم'],
+    [35,'استخراج النصوص...','قراءة كل صفحات PDF'],
+    [55,'تحليل المتطلبات...','الذكاء الاصطناعي يعمل'],
+    [75,'فحص الامتثال...','البحث عن الثغرات والتعارضات'],
+    [90,'توليد الأسئلة...','إنشاء رسالة الاستيضاح'],
+  ];
+  let si=0;
+  const timer=setInterval(()=>{
+    if(si<steps.length){bar.style.width=steps[si][0]+'%';label.textContent=steps[si][1];sub.textContent=steps[si][2];si++;}
+  },1800);
+  const fd=new FormData(); fd.append('file',file);
+  try{
+    const r=await fetch(`${API}/analyze/`,{method:'POST',headers:H,body:fd});
+    clearInterval(timer); bar.style.width='100%'; label.textContent='اكتمل التحليل ✅';
+    if(!r.ok){const e=await r.json();toast(e.detail||'خطأ','error');prog.style.display='none';return;}
+    const data=await r.json();
+    currentSession=data.session_id;
+    setTimeout(()=>{prog.style.display='none';renderResults(data);},600);
+  }catch(e){clearInterval(timer);toast('تعذّر الاتصال بالخادم','error');prog.style.display='none';}
+}
+
+function renderResults(data){
+  const {decision:d, analyzer:a, compliance:c, qa:q}=data;
+  const reqs=(a.extract_requirements?.requirements||[]);
+  const deadlines=(a.extract_deadlines?.deadlines||[]);
+  const docs=(a.extract_documents?.documents||[]);
+  const gaps=(c.check_gaps?.gaps||[]);
+  const ambs=(c.check_ambiguities?.ambiguities||[]);
+  const conflicts=(c.check_conflicts?.conflicts||[]);
+  const questions=(q.questions||[]);
+  const vbClass={'green':'vb-green','yellow':'vb-yellow','red':'vb-red'}[d.verdict_color]||'vb-green';
+  const srClass={'green':'sr-green','yellow':'sr-yellow','red':'sr-red'}[d.verdict_color]||'sr-green';
+  const vIcon={'green':'✅','yellow':'⚠️','red':'❌'}[d.verdict_color]||'✅';
+
+  document.getElementById('resultsSection').style.display='block';
+  document.getElementById('uploadSection').style.display='none';
+
+  const issuesList=d.issues?.length?`<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">${d.issues.map(i=>`<span style="background:rgba(0,0,0,.08);border-radius:6px;padding:2px 10px;font-size:11px;">${i}</span>`).join('')}</div>`:'';
+
+  let html=`
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+    <div><h2 style="font-size:18px;font-weight:800;">📄 ${data.filename}</h2><p style="font-size:12px;color:var(--muted);margin-top:3px;">${data.pages} صفحة</p></div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-ghost btn-sm" onclick="resetAnalyze()">↩ تحليل جديد</button>
+    </div>
+  </div>
+
+  <div class="verdict-banner ${vbClass}">
+    <div class="vb-icon">${vIcon}</div>
+    <div style="flex:1"><div class="vb-title">${d.verdict_ar}</div><div class="vb-exp">${d.explanation}</div>${issuesList}</div>
+    <div class="score-ring ${srClass}">${d.score}</div>
+  </div>
+
+  <div class="stats-row">
+    ${chip(d.stats.requirements,'متطلب','📋')}
+    ${chip(d.stats.mandatory_reqs,'إلزامي','🔴')}
+    ${chip(d.stats.deadlines,'موعد','📅')}
+    ${chip(d.stats.documents,'مستند','📎')}
+    ${chip(d.stats.gaps,'ثغرة','⚠️')}
+    ${chip(d.stats.critical_gaps,'حرج','🚨')}
+    ${chip(d.stats.ambiguities,'غموض','❓')}
+    ${chip(d.stats.conflicts,'تعارض','⚡')}
+    ${chip(d.stats.completeness+'%','اكتمال','✅')}
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div class="card">
+      <div class="card-header"><h3>📋 المتطلبات (${reqs.length})</h3></div>
+      <div style="max-height:280px;overflow-y:auto;">
+        ${reqs.length?reqs.map(r=>`<div class="req-item"><div class="req-dot ${r.is_mandatory?'req-mandatory':'req-optional'}"></div><div class="req-text"><strong>${r.title}</strong><p>${r.description}</p></div></div>`).join(''):'<div class="empty-state"><span class="ei">📋</span><p>لا توجد متطلبات</p></div>'}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h3>📅 المواعيد (${deadlines.length})</h3></div>
+      <div style="max-height:280px;overflow-y:auto;">
+        ${deadlines.length?deadlines.map(d=>`<div class="req-item"><div class="req-dot ${d.is_critical?'req-mandatory':'req-optional'}"></div><div class="req-text"><strong>${d.event}</strong><p>${d.date_text}</p></div></div>`).join(''):'<div class="empty-state"><span class="ei">📅</span><p>لا توجد مواعيد</p></div>'}
+      </div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div class="card">
+      <div class="card-header"><h3>⚠️ الثغرات (${gaps.length})</h3></div>
+      <div style="max-height:240px;overflow-y:auto;">
+        ${gaps.length?gaps.map(g=>`<div class="req-item"><div class="req-dot" style="background:${{critical:'#dc2626',major:'#d97706',minor:'#6b7f6b'}[g.severity]}"></div><div class="req-text"><strong>${g.title}</strong><p>${g.description}</p></div></div>`).join(''):'<div class="empty-state"><span class="ei">✅</span><p>لا ثغرات</p></div>'}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h3>⚡ التعارضات (${conflicts.length})</h3></div>
+      <div style="max-height:240px;overflow-y:auto;">
+        ${conflicts.length?conflicts.map(cf=>`<div class="req-item"><div class="req-dot" style="background:${{high:'#dc2626',medium:'#d97706',low:'#6b7f6b'}[cf.risk_level]}"></div><div class="req-text"><strong>${cf.clause_a} ↔ ${cf.clause_b}</strong><p>${cf.description}</p><p style="margin-top:4px;color:var(--green2)">💡 ${cf.suggested_resolution}</p></div></div>`).join(''):'<div class="empty-state"><span class="ei">✅</span><p>لا تعارضات</p></div>'}
+      </div>
+    </div>
+  </div>
+
+  ${questions.length?`
+  <div class="card">
+    <div class="card-header"><h3>❓ أسئلة الاستيضاح (${questions.length})</h3><button class="btn btn-ghost btn-sm" onclick="copyQuestions()">نسخ الأسئلة</button></div>
+    ${q.cover_letter_ar?`<div style="padding:14px 16px;background:var(--bg);border-bottom:1px solid var(--border);font-size:13px;line-height:1.6;white-space:pre-wrap;">${q.cover_letter_ar}</div>`:''}
+    <div id="questionsList">
+    ${questions.map(qq=>`<div class="req-item">
+      <div style="min-width:28px;height:28px;border-radius:50%;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">${qq.number}</div>
+      <div class="req-text">
+        <div style="display:flex;gap:6px;margin-bottom:4px;">
+          <span class="badge b-${qq.category}" style="font-size:9px;">${qq.category}</span>
+          <span class="badge imp-${qq.priority==='urgent'?'critical':qq.priority==='important'?'high':'normal'}" style="font-size:9px;">${{urgent:'عاجل',important:'مهم',normal:'عادي'}[qq.priority]||qq.priority}</span>
+        </div>
+        <strong>${qq.subject}</strong>
+        <p>${qq.question_ar}</p>
+      </div>
+    </div>`).join('')}
+    </div>
+  </div>`:''}
+
+  <div class="card">
+    <div class="card-header"><h3>🤖 استفسر عن الوثيقة</h3></div>
+    <div class="chat-box" id="chatBox"><div class="msg msg-ai">مرحباً! يمكنك سؤالي عن أي شيء في هذه الوثيقة.</div></div>
+    <div class="chat-input-row">
+      <input class="chat-input" id="chatInput" placeholder="اكتب سؤالك..." onkeydown="if(event.key==='Enter')sendChat()">
+      <button class="btn btn-primary" onclick="sendChat()">إرسال</button>
+    </div>
+  </div>`;
+
+  document.getElementById('resultsSection').innerHTML=html;
+}
+
+function chip(n,l,ic){return`<div class="s-chip"><div class="n">${ic} ${n}</div><div class="l">${l}</div></div>`;}
+
+function resetAnalyze(){
+  document.getElementById('resultsSection').style.display='none';
+  document.getElementById('uploadSection').style.display='block';
+  document.getElementById('resultsSection').innerHTML='';
+  currentSession=null;
+}
+
+async function sendChat(){
+  const inp=document.getElementById('chatInput');
+  const q=inp.value.trim(); if(!q)return;
+  if(!currentSession){toast('أعد رفع الملف','error');return;}
+  const box=document.getElementById('chatBox');
+  box.innerHTML+=`<div class="msg msg-user">${q}</div>`;
+  inp.value=''; box.scrollTop=box.scrollHeight;
+  box.innerHTML+=`<div class="msg msg-ai" id="aiTyping">⏳ يكتب...</div>`;
+  const r=await fetch(`${API}/chat/`,{method:'POST',headers:{...H,'Content-Type':'application/json'},body:JSON.stringify({session_id:currentSession,question:q})});
+  const d=await r.json();
+  document.getElementById('aiTyping').textContent=d.answer||'لا يوجد رد';
+  box.scrollTop=box.scrollHeight;
+}
+
+function copyQuestions(){
+  const el=document.getElementById('questionsList');
+  navigator.clipboard.writeText(el.innerText).then(()=>toast('تم النسخ ✅'));
+}
+
+// ── HISTORY ──
+async function loadHistory(){
+  const r=await fetch(`${API}/analyses/`,{headers:H}).then(r=>r.json()).catch(()=>[]);
+  const tb=document.getElementById('historyTbody');
+  if(!r.length){tb.innerHTML='<tr><td colspan="5"><div class="empty-state"><span class="ei">📂</span><p>لا توجد تحليلات</p></div></td></tr>';return;}
+  tb.innerHTML=r.map(a=>`<tr>
+    <td><strong>${a.filename}</strong></td>
+    <td class="td-mono">${a.pages||0}</td>
+    <td><span class="badge b-${(a.verdict||'').toUpperCase()}">${verdictAr(a.verdict)}</span></td>
+    <td><span style="font-family:var(--mono);font-weight:700;color:${scoreColor(a.score)}">${a.score||0}</span></td>
+    <td class="td-muted">${formatDate(a.created_at)}</td>
+  </tr>`).join('');
+}
+
+// ── PAGE NAV ──
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>{if(n.getAttribute('onclick')===`showPage('${name}')`) n.classList.add('active');});
+  if(name==='dashboard') loadDashboard();
+  if(name==='disclosures') loadDisclosures();
+  if(name==='clients') loadClients();
+  if(name==='history') loadHistory();
+}
+
+// ── HELPERS ──
+function logout(){localStorage.clear();window.location.href='/';}
+function formatDate(d){if(!d)return'—';return new Date(d).toLocaleDateString('ar-SA',{year:'numeric',month:'short',day:'numeric'});}
+function verdictAr(v){return{PROCEED:'المضي قدماً',CLARIFY:'طلب توضيحات',RISK:'مخاطر عالية'}[v]||v||'—';}
+function scoreColor(s){return s>=75?'#22a34e':s>=50?'#d97706':'#dc2626';}
+function clientTypeAr(t){return{corporate:'شركة',government:'حكومي',individual:'فرد',ngo:'منظمة'}[t]||t;}
+function clientStatusAr(s){return{active:'نشط',inactive:'غير نشط',prospect:'محتمل',suspended:'موقوف'}[s]||s;}
+function discCatAr(c){return{general:'عام',financial:'مالي',operational:'تشغيلي',legal:'قانوني',hr:'موارد بشرية',technical:'تقني',strategic:'استراتيجي',urgent:'عاجل'}[c]||c;}
+function discImpAr(i){return{critical:'حرج',high:'مهم',normal:'عادي',low:'منخفض'}[i]||i;}
+
+let toastT;
+function toast(msg,type='success'){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast show'+(type==='error'?' error':'');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),3200);
+}
+function closeModal(id){document.getElementById(id).classList.remove('show');}
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('show');}));
+
+init();
+</script>
+</body>
+</html>

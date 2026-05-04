@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>منجز — لوحة التحكم المؤسسية</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#f4f6f5;--white:#fff;--dark:#0d1f14;--green:#22a34e;--green2:#1a7a3a;--green3:#d4edda;--green4:#eaf5ed;
+  --border:#dce8de;--muted:#6b7f6b;--red:#dc2626;--yellow:#d97706;--blue:#2563eb;--purple:#7c3aed;
+  --font:'Tajawal',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+body{background:var(--bg);color:var(--dark);font-family:var(--font);min-height:100vh;}
+.layout{display:grid;grid-template-columns:250px 1fr;min-height:100vh;}
+
+/* ── Sidebar ── */
+.sidebar{background:linear-gradient(160deg,#0b1f12 0%,#0f2a18 60%,#0a1f12 100%);padding:20px 14px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.logo{padding:4px 8px 20px;border-bottom:1px solid rgba(34,163,78,.15);margin-bottom:10px;}
+.logo h2{font-size:24px;font-weight:900;color:#fff;letter-spacing:-0.5px;}
+.logo h2 span{color:var(--green);}
+.logo small{display:block;font-size:9px;color:rgba(255,255,255,.25);letter-spacing:3px;text-transform:uppercase;margin-top:3px;font-family:var(--mono);}
+.nav-group{margin-top:8px;}
+.nav-label{font-size:9px;letter-spacing:2.5px;color:rgba(255,255,255,.2);text-transform:uppercase;padding:10px 10px 4px;font-family:var(--mono);}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:9px;font-size:13.5px;font-weight:500;cursor:pointer;color:rgba(255,255,255,.4);border:1px solid transparent;transition:all .15s;margin-bottom:1px;}
+.nav-item:hover{background:rgba(255,255,255,.05);color:rgba(255,255,255,.75);}
+.nav-item.active{background:rgba(34,163,78,.18);color:#fff;border-color:rgba(34,163,78,.35);}
+.nav-item .ni{font-size:15px;width:20px;text-align:center;}
+.sidebar-footer{margin-top:auto;padding-top:14px;border-top:1px solid rgba(255,255,255,.07);}
+.user-pill{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.05);border-radius:9px;margin-bottom:8px;}
+.user-av{width:34px;height:34px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:14px;flex-shrink:0;}
+.user-name{font-size:13px;color:rgba(255,255,255,.8);font-weight:600;}
+.user-role{font-size:10px;color:var(--green);font-family:var(--mono);}
+.logout-btn{width:100%;padding:9px;background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.2);color:#f87171;border-radius:8px;font-family:var(--font);font-size:13px;cursor:pointer;transition:all .2s;}
+.logout-btn:hover{background:rgba(220,38,38,.18);}
+
+/* ── Main ── */
+.main{padding:28px 32px;overflow-y:auto;min-width:0;}
+.page{display:none;animation:fadeUp .35s ease;}
+.page.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;}
+.page-title h1{font-size:22px;font-weight:800;display:flex;align-items:center;gap:8px;}
+.page-title p{font-size:13px;color:var(--muted);margin-top:3px;}
+
+/* ── Stats Grid ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:24px;}
+.stat-card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:18px 20px;transition:all .25s;cursor:default;}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(10,60,20,.09);}
+.stat-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.stat-icon{font-size:22px;}
+.stat-badge{font-size:10px;font-family:var(--mono);padding:3px 8px;border-radius:100px;font-weight:600;}
+.sg{background:var(--green3);color:var(--green2);}
+.sy{background:#fef3c7;color:#92400e;}
+.sr{background:#fee2e2;color:var(--red);}
+.sb{background:#dbeafe;color:var(--blue);}
+.sp{background:#ede9fe;color:var(--purple);}
+.stat-num{font-size:30px;font-weight:900;font-family:var(--mono);}
+.stat-label{font-size:12px;color:var(--muted);margin-top:2px;}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:6px;padding-top:6px;border-top:1px solid var(--border);}
+
+/* ── Card ── */
+.card{background:var(--white);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:20px;}
+.card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.card-header h3{font-size:15px;font-weight:700;display:flex;align-items:center;gap:6px;}
+.card-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+
+/* ── Table ── */
+.tbl-wrap{overflow-x:auto;}
+.table{width:100%;border-collapse:collapse;font-size:13.5px;}
+.table th{text-align:right;padding:11px 16px;background:#f8faf8;color:var(--muted);font-size:11px;letter-spacing:.5px;font-weight:700;border-bottom:1px solid var(--border);white-space:nowrap;}
+.table td{padding:12px 16px;border-bottom:1px solid #f0f4f0;vertical-align:middle;}
+.table tr:last-child td{border-bottom:none;}
+.table tbody tr:hover td{background:#f8faf8;}
+.table td strong{font-weight:700;}
+.td-mono{font-family:var(--mono);font-size:12px;}
+.td-muted{font-size:12px;color:var(--muted);}
+
+/* ── Badges ── */
+.badge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.5px;padding:3px 10px;border-radius:6px;font-family:var(--mono);white-space:nowrap;}
+.b-admin,.b-PROCEED,.b-active,.b-published{background:var(--green3);color:var(--green2);}
+.b-manager{background:#dbeafe;color:var(--blue);}
+.b-user,.b-prospect,.b-draft{background:#f3f4f6;color:#4b5563;}
+.b-inactive,.b-terminated,.b-suspended,.b-RISK{background:#fee2e2;color:var(--red);}
+.b-on_leave,.b-CLARIFY{background:#fef3c7;color:#92400e;}
+.b-corporate{background:#dbeafe;color:var(--blue);}
+.b-government{background:#ede9fe;color:var(--purple);}
+.b-individual{background:var(--green3);color:var(--green2);}
+.b-ngo{background:#fef3c7;color:#92400e;}
+.b-financial{background:#fef3c7;color:#92400e;}
+.b-legal{background:#fee2e2;color:var(--red);}
+.b-hr{background:#dbeafe;color:var(--blue);}
+.b-technical{background:#ede9fe;color:var(--purple);}
+.b-operational,.b-strategic,.b-general{background:#f3f4f6;color:#4b5563;}
+.b-urgent{background:#fee2e2;color:var(--red);}
+.b-critical{background:#fee2e2;color:var(--red);}
+.imp-critical{background:#fee2e2;color:var(--red);}
+.imp-high{background:#fef3c7;color:#92400e;}
+.imp-normal{background:#f3f4f6;color:#4b5563;}
+.imp-low{background:var(--green3);color:var(--green2);}
+
+/* ── Buttons ── */
+.btn{padding:8px 18px;border:none;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
+.btn-primary{background:var(--dark);color:#fff;}
+.btn-primary:hover{background:var(--green2);}
+.btn-green{background:var(--green);color:#fff;}
+.btn-green:hover{background:var(--green2);}
+.btn-danger{background:#fee2e2;color:var(--red);border:1px solid #fca5a5;}
+.btn-danger:hover{background:#fca5a5;}
+.btn-warning{background:#fef3c7;color:#92400e;border:1px solid #fcd34d;}
+.btn-warning:hover{background:#fcd34d;}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}
+.btn-ghost:hover{background:var(--bg);}
+.btn-sm{padding:5px 12px;font-size:12px;}
+.btn-icon{padding:7px;border-radius:7px;}
+.btn-group{display:flex;gap:5px;flex-wrap:wrap;}
+
+/* ── Search & Filter ── */
+.search-bar{padding:8px 14px;border:1.5px solid var(--border);border-radius:9px;font-family:var(--font);font-size:13px;outline:none;transition:border-color .2s;background:var(--white);}
+.search-bar:focus{border-color:var(--green);}
+.filter-select{padding:8px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:var(--font);font-size:13px;outline:none;background:var(--white);cursor:pointer;}
+.filter-select:focus{border-color:var(--green);}
+
+/* ── Modal ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(3px);padding:20px;}
+.modal-overlay.show{display:flex;}
+.modal{background:#fff;border-radius:18px;padding:28px;width:100%;max-width:540px;max-height:90vh;overflow-y:auto;animation:modalIn .28s ease;}
+.modal.modal-lg{max-width:720px;}
+@keyframes modalIn{from{opacity:0;transform:scale(.93)}to{opacity:1;transform:none}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.modal-header h3{font-size:18px;font-weight:800;}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);padding:4px;line-height:1;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12px;font-weight:700;margin-bottom:5px;color:var(--dark);letter-spacing:.3px;}
+.field input,.field select,.field textarea{width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:9px;font-family:var(--font);font-size:14px;outline:none;transition:border-color .2s;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--green);}
+.field textarea{resize:vertical;min-height:80px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.field-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:22px;padding-top:16px;border-top:1px solid var(--border);}
+.section-title{font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:12px;margin-top:16px;}
+
+/* ── Employee/Client Detail Panel ── */
+.detail-panel{position:fixed;inset-y:0;left:0;width:520px;background:#fff;z-index:999;box-shadow:-4px 0 40px rgba(0,0,0,.15);display:none;flex-direction:column;overflow:hidden;}
+.detail-panel.show{display:flex;}
+.dp-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--dark);color:#fff;}
+.dp-header h3{font-size:16px;font-weight:700;}
+.dp-body{flex:1;overflow-y:auto;padding:20px 24px;}
+.dp-section{margin-bottom:20px;}
+.dp-section h4{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+.dp-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.dp-field{background:var(--bg);border-radius:8px;padding:10px 12px;}
+.dp-field label{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:3px;}
+.dp-field span{font-size:13px;font-weight:600;}
+.dp-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:8px;}
+
+/* ── Disclosure content ── */
+.disc-content{background:var(--bg);border-radius:10px;padding:16px;font-size:14px;line-height:1.7;white-space:pre-wrap;max-height:200px;overflow-y:auto;}
+
+/* ── Score ── */
+.score-mini{display:inline-flex;align-items:center;gap:4px;font-family:var(--mono);font-size:13px;font-weight:700;}
+.score-dot{width:7px;height:7px;border-radius:50%;}
+
+/* ── Empty ── */
+.empty-state{text-align:center;padding:52px 20px;color:var(--muted);}
+.empty-state .ei{font-size:44px;display:block;margin-bottom:12px;opacity:.5;}
+.empty-state p{font-size:14px;}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--dark);color:#fff;padding:12px 22px;border-radius:12px;font-size:13px;font-weight:600;z-index:9999;opacity:0;pointer-events:none;transition:opacity .3s;white-space:nowrap;}
+.toast.show{opacity:1;}
+.toast.error{background:#dc2626;}
+
+/* ── Activity Log ── */
+.activity-item{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid #f0f4f0;}
+.activity-item:last-child{border-bottom:none;}
+.act-icon{width:32px;height:32px;border-radius:50%;background:var(--green4);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.act-text{font-size:13px;font-weight:600;}
+.act-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* Tabs */
+.tabs{display:flex;gap:4px;border-bottom:2px solid var(--border);margin-bottom:20px;}
+.tab{padding:9px 16px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s;}
+.tab.active{color:var(--green);border-bottom-color:var(--green);}
+
+@media(max-width:900px){.layout{grid-template-columns:1fr;}.sidebar{display:none;}}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <div class="logo">
+    <h2>م<span>ن</span>جز</h2>
+    <small>Enterprise v2.0</small>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">الرئيسية</div>
+    <div class="nav-item active" onclick="showPage('overview')"><span class="ni">📊</span> نظرة عامة</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">الموارد البشرية</div>
+    <div class="nav-item" onclick="showPage('employees')"><span class="ni">👷</span> الموظفون</div>
+    <div class="nav-item" onclick="showPage('departments')"><span class="ni">🏢</span> الأقسام</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">العملاء</div>
+    <div class="nav-item" onclick="showPage('clients')"><span class="ni">🤝</span> العملاء</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">الإفصاحات</div>
+    <div class="nav-item" onclick="showPage('disclosures')"><span class="ni">📢</span> الإفصاحات</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">النظام</div>
+    <div class="nav-item" onclick="showPage('users')"><span class="ni">👥</span> المستخدمون</div>
+    <div class="nav-item" onclick="showPage('analyses')"><span class="ni">📋</span> تحليلات المناقصات</div>
+    <div class="nav-item" onclick="showPage('activity')"><span class="ni">📝</span> سجل النشاط</div>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-pill">
+      <div class="user-av" id="adminInitial">م</div>
+      <div><div class="user-name" id="adminName">المدير</div><div class="user-role">admin</div></div>
+    </div>
+    <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
+  </div>
+</aside>
+
+<main class="main">
+
+<!-- ═══ OVERVIEW ═══ -->
+<div class="page active" id="page-overview">
+  <div class="page-header">
+    <div class="page-title"><h1>📊 نظرة عامة</h1><p>إحصائيات النظام الكاملة</p></div>
+    <button class="btn btn-ghost btn-sm" onclick="loadOverview()">↻ تحديث</button>
+  </div>
+  <div class="stats-grid" id="overviewStats">
+    <div class="stat-card"><div class="stat-top"><span class="stat-icon">👷</span><span class="stat-badge sg">الموظفون</span></div><div class="stat-num" id="ov-emp">—</div><div class="stat-label">إجمالي الموظفين</div><div class="stat-sub" id="ov-emp-sub">—</div></div>
+    <div class="stat-card"><div class="stat-top"><span class="stat-icon">🤝</span><span class="stat-badge sb">العملاء</span></div><div class="stat-num" id="ov-cli">—</div><div class="stat-label">إجمالي العملاء</div><div class="stat-sub" id="ov-cli-sub">—</div></div>
+    <div class="stat-card"><div class="stat-top"><span class="stat-icon">📢</span><span class="stat-badge sp">الإفصاحات</span></div><div class="stat-num" id="ov-disc">—</div><div class="stat-label">إجمالي الإفصاحات</div><div class="stat-sub" id="ov-disc-sub">—</div></div>
+    <div class="stat-card"><div class="stat-top"><span class="stat-icon">👥</span><span class="stat-badge sg">المستخدمون</span></div><div class="stat-num" id="ov-users">—</div><div class="stat-label">مستخدمو النظام</div><div class="stat-sub" id="ov-users-sub">—</div></div>
+    <div class="stat-card"><div class="stat-top"><span class="stat-icon">📋</span><span class="stat-badge sy">التحليلات</span></div><div class="stat-num" id="ov-anal">—</div><div class="stat-label">تحليلات المناقصات</div><div class="stat-sub" id="ov-anal-sub">—</div></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h3>📝 آخر النشاطات</h3></div>
+    <div style="padding:16px 20px;" id="activityFeed"><div class="empty-state"><span class="ei">⏳</span><p>تحميل...</p></div></div>
+  </div>
+</div>
+
+<!-- ═══ EMPLOYEES ═══ -->
+<div class="page" id="page-employees">
+  <div class="page-header">
+    <div class="page-title"><h1>👷 الموظفون</h1><p>إدارة بيانات الموظفين</p></div>
+    <button class="btn btn-primary" onclick="openEmpModal()">＋ إضافة موظف</button>
+  </div>
+  <div class="stats-grid" id="empStats">
+    <div class="stat-card"><div class="stat-top"><span class="stat-icon">✅</span><span class="stat-badge sg">نشط</span></div><div class="stat-num" id="es-active">—</div><div class="stat-label">موظفون نشطون</div></div>
+    <div class="stat-card"><div class="stat-top"><span class="stat-icon">🏖️</span><span class="stat-badge sy">إجازة</span></div><div class="stat-num" id="es-leave">—</div><div class="stat-label">في إجازة</div></div>
+    <div class="stat-card"><div class="stat-top"><span class="stat-icon">💰</span><span class="stat-badge sg">الرواتب</span></div><div class="stat-num" id="es-salary">—</div><div class="stat-label">إجمالي الرواتب (ريال)</div></div>
+    <div class="stat-card"><div class="stat-top"><span class="stat-icon">🇸🇦</span><span class="stat-badge sp">سعودة</span></div><div class="stat-num" id="es-saudi">—</div><div class="stat-label">نسبة السعودة</div></div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <h3>👷 قائمة الموظفين</h3>
+      <div class="card-tools">
+        <input class="search-bar" placeholder="🔍 بحث بالاسم أو الرقم..." oninput="filterEmployees(this.value)" style="width:220px">
+        <select class="filter-select" onchange="filterEmpByStatus(this.value)">
+          <option value="">كل الحالات</option>
+          <option value="active">نشط</option>
+          <option value="inactive">غير نشط</option>
+          <option value="on_leave">إجازة</option>
+          <option value="terminated">منتهي</option>
+        </select>
+        <select class="filter-select" id="deptFilter" onchange="filterEmpByDept(this.value)">
+          <option value="">كل الأقسام</option>
+        </select>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+    <table class="table">
+      <thead><tr><th>الموظف</th><th>القسم</th><th>المسمى الوظيفي</th><th>نوع التوظيف</th><th>الراتب</th><th>الحالة</th><th>تاريخ التعيين</th><th>إجراءات</th></tr></thead>
+      <tbody id="empTbody"><tr><td colspan="8" class="empty-state"><span class="ei">⏳</span></td></tr></tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ DEPARTMENTS ═══ -->
+<div class="page" id="page-departments">
+  <div class="page-header">
+    <div class="page-title"><h1>🏢 الأقسام</h1><p>إدارة هيكل الأقسام</p></div>
+    <button class="btn btn-primary" onclick="openDeptModal()">＋ إضافة قسم</button>
+  </div>
+  <div class="card">
+    <div class="card-header"><h3>🏢 الأقسام</h3></div>
+    <div class="tbl-wrap">
+    <table class="table">
+      <thead><tr><th>اسم القسم</th><th>الكود</th><th>المدير</th><th>الوصف</th><th>إجراءات</th></tr></thead>
+      <tbody id="deptTbody"><tr><td colspan="5" class="empty-state">تحميل...</td></tr></tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CLIENTS ═══ -->
+<div class="page" id="page-clients">
+  <div class="page-header">
+    <div class="page-title"><h1>🤝 العملاء</h1><p>إدارة بيانات العملاء والشركاء</p></div>
+    <button class="btn btn-primary" onclick="openClientModal()">＋ إضافة عميل</button>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-top"><span class="stat-icon">✅</span><span class="stat-badge sg">نشط</span></div><div class="stat-num" id="cs-active">—</div><div class="stat-label">عملاء نشطون</div></div>
+    <div class="stat-card"><div class="stat-top"><span class="stat-icon">🎯</span><span class="stat-badge sy">محتمل</span></div><div class="stat-num" id="cs-prospect">—</div><div class="stat-label">عملاء محتملون</div></div>
+    <div class="stat-card"><div class="stat-top"><span class="stat-icon">💼</span><span class="stat-badge sb">حكومي</span></div><div class="stat-num" id="cs-gov">—</div><div class="stat-label">جهات حكومية</div></div>
+    <div class="stat-card"><div class="stat-top"><span class="stat-icon">💰</span><span class="stat-badge sg">قيمة العقود</span></div><div class="stat-num" id="cs-value">—</div><div class="stat-label">إجمالي قيمة العقود (ريال)</div></div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <h3>🤝 قائمة العملاء</h3>
+      <div class="card-tools">
+        <input class="search-bar" placeholder="🔍 بحث بالاسم أو الكود..." oninput="filterClients(this.value)" style="width:220px">
+        <select class="filter-select" onchange="filterClientByStatus(this.value)">
+          <option value="">كل الحالات</option>
+          <option value="active">نشط</option>
+          <option value="prospect">محتمل</option>
+          <option value="inactive">غير نشط</option>
+          <option value="suspended">موقوف</option>
+        </select>
+        <select class="filter-select" onchange="filterClientByType(this.value)">
+          <option value="">كل الأنواع</option>
+          <option value="corporate">شركات</option>
+          <option value="government">حكومي</option>
+          <option value="individual">أفراد</option>
+          <option value="ngo">منظمات</option>
+        </select>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+    <table class="table">
+      <thead><tr><th>العميل</th><th>النوع</th><th>الصناعة</th><th>جهة التواصل</th><th>قيمة العقد</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
+      <tbody id="clientTbody"><tr><td colspan="7" class="empty-state"><span class="ei">⏳</span></td></tr></tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ DISCLOSURES ═══ -->
+<div class="page" id="page-disclosures">
+  <div class="page-header">
+    <div class="page-title"><h1>📢 الإفصاحات</h1><p>إدارة الإعلانات والإفصاحات المؤسسية</p></div>
+    <button class="btn btn-primary" onclick="openDiscModal()">＋ إفصاح جديد</button>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <h3>📢 قائمة الإفصاحات</h3>
+      <div class="card-tools">
+        <select class="filter-select" onchange="filterDiscByCategory(this.value)">
+          <option value="">كل الفئات</option>
+          <option value="financial">مالي</option>
+          <option value="operational">تشغيلي</option>
+          <option value="legal">قانوني</option>
+          <option value="hr">موارد بشرية</option>
+          <option value="technical">تقني</option>
+          <option value="strategic">استراتيجي</option>
+          <option value="urgent">عاجل</option>
+          <option value="general">عام</option>
+        </select>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+    <table class="table">
+      <thead><tr><th>العنوان</th><th>الفئة</th><th>الأهمية</th><th>الحالة</th><th>المشاهدات</th><th>المُنشئ</th><th>التاريخ</th><th>إجراءات</th></tr></thead>
+      <tbody id="discTbody"><tr><td colspan="8" class="empty-state"><span class="ei">⏳</span></td></tr></tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ USERS ═══ -->
+<div class="page" id="page-users">
+  <div class="page-header">
+    <div class="page-title"><h1>👥 المستخدمون</h1><p>إدارة حسابات مستخدمي النظام</p></div>
+    <button class="btn btn-primary" onclick="showAddUser()">＋ مستخدم جديد</button>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <h3>👥 المستخدمون</h3>
+      <input class="search-bar" placeholder="🔍 بحث..." oninput="filterUsers(this.value)" style="width:220px">
+    </div>
+    <div class="tbl-wrap">
+    <table class="table">
+      <thead><tr><th>الاسم</th><th>البريد</th><th>الشركة</th><th>القسم</th><th>الصلاحية</th><th>الحالة</th><th>آخر دخول</th><th>إجراءات</th></tr></thead>
+      <tbody id="usersTbody"><tr><td colspan="8" class="empty-state"><span class="ei">⏳</span></td></tr></tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ANALYSES ═══ -->
+<div class="page" id="page-analyses">
+  <div class="page-header">
+    <div class="page-title"><h1>📋 تحليلات المناقصات</h1><p>سجل جميع التحليلات</p></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h3>📋 التحليلات</h3></div>
+    <div class="tbl-wrap">
+    <table class="table">
+      <thead><tr><th>الملف</th><th>المستخدم</th><th>القرار</th><th>الدرجة</th><th>التاريخ</th><th>إجراءات</th></tr></thead>
+      <tbody id="analysesTbody"></tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ACTIVITY ═══ -->
+<div class="page" id="page-activity">
+  <div class="page-header">
+    <div class="page-title"><h1>📝 سجل النشاط</h1><p>جميع العمليات في النظام</p></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h3>📝 النشاطات الأخيرة</h3></div>
+    <div style="padding:8px 20px;" id="fullActivityLog"></div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<!-- ══════════ MODALS ══════════ -->
+
+<!-- Add User Modal -->
+<div class="modal-overlay" id="addUserModal">
+  <div class="modal">
+    <div class="modal-header"><h3>إضافة مستخدم جديد</h3><button class="modal-close" onclick="closeModal('addUserModal')">✕</button></div>
+    <div class="field-row"><div class="field"><label>الاسم الكامل *</label><input id="nu-name" placeholder="محمد عبدالله"></div><div class="field"><label>البريد الإلكتروني *</label><input id="nu-email" type="email" placeholder="user@company.com"></div></div>
+    <div class="field-row"><div class="field"><label>الشركة</label><input id="nu-company" placeholder="اسم الشركة"></div><div class="field"><label>القسم</label><input id="nu-dept" placeholder="القسم"></div></div>
+    <div class="field-row"><div class="field"><label>رقم الجوال</label><input id="nu-phone" placeholder="05xxxxxxxx"></div><div class="field"><label>الصلاحية</label><select id="nu-role"><option value="user">مستخدم</option><option value="manager">مشرف</option><option value="admin">مدير</option></select></div></div>
+    <div class="field"><label>كلمة السر *</label><input id="nu-pass" type="password" placeholder="••••••••"></div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('addUserModal')">إلغاء</button><button class="btn btn-primary" onclick="createUser()">إنشاء الحساب</button></div>
+  </div>
+</div>
+
+<!-- Reset Password Modal -->
+<div class="modal-overlay" id="resetPassModal">
+  <div class="modal">
+    <div class="modal-header"><h3>🔑 تعيين كلمة سر جديدة</h3><button class="modal-close" onclick="closeModal('resetPassModal')">✕</button></div>
+    <input type="hidden" id="rp-uid">
+    <div class="field"><label>كلمة السر الجديدة</label><input id="rp-pass" type="password" placeholder="6 أحرف على الأقل"></div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('resetPassModal')">إلغاء</button><button class="btn btn-warning" onclick="doResetPass()">تعيين</button></div>
+  </div>
+</div>
+
+<!-- Employee Modal -->
+<div class="modal-overlay" id="empModal">
+  <div class="modal modal-lg">
+    <div class="modal-header"><h3 id="empModalTitle">إضافة موظف جديد</h3><button class="modal-close" onclick="closeModal('empModal')">✕</button></div>
+    <input type="hidden" id="emp-id">
+    <div class="section-title">البيانات الأساسية</div>
+    <div class="field-row"><div class="field"><label>رقم الموظف *</label><input id="emp-number" placeholder="EMP-001"></div><div class="field"><label>الاسم الكامل *</label><input id="emp-name" placeholder="محمد عبدالله"></div></div>
+    <div class="field-row"><div class="field"><label>الاسم بالعربي</label><input id="emp-arabic" placeholder="محمد بن عبدالله"></div><div class="field"><label>الجنس</label><select id="emp-gender"><option value="">اختر</option><option value="male">ذكر</option><option value="female">أنثى</option></select></div></div>
+    <div class="field-row"><div class="field"><label>البريد الإلكتروني</label><input id="emp-email" type="email"></div><div class="field"><label>رقم الجوال</label><input id="emp-phone" placeholder="05xxxxxxxx"></div></div>
+    <div class="field-row"><div class="field"><label>رقم الهوية / الإقامة</label><input id="emp-nid" placeholder="1xxxxxxxxx"></div><div class="field"><label>الجنسية</label><input id="emp-nat" value="سعودي"></div></div>
+    <div class="section-title">بيانات الوظيفة</div>
+    <div class="field-row"><div class="field"><label>القسم</label><select id="emp-dept"><option value="">اختر القسم</option></select></div><div class="field"><label>المسمى الوظيفي *</label><input id="emp-pos" placeholder="مهندس برمجيات"></div></div>
+    <div class="field-row3">
+      <div class="field"><label>الدرجة الوظيفية</label><input id="emp-grade" placeholder="A3"></div>
+      <div class="field"><label>نوع التوظيف</label><select id="emp-type"><option value="full_time">دوام كامل</option><option value="part_time">دوام جزئي</option><option value="contract">عقد</option><option value="intern">تدريب</option></select></div>
+      <div class="field"><label>الحالة</label><select id="emp-status"><option value="active">نشط</option><option value="inactive">غير نشط</option><option value="on_leave">إجازة</option><option value="terminated">منتهي</option></select></div>
+    </div>
+    <div class="field-row"><div class="field"><label>تاريخ التعيين</label><input id="emp-hire" type="date"></div><div class="field"><label>تاريخ الانتهاء</label><input id="emp-end" type="date"></div></div>
+    <div class="section-title">البيانات المالية</div>
+    <div class="field-row"><div class="field"><label>الراتب الأساسي (ريال)</label><input id="emp-salary" type="number" placeholder="0"></div><div class="field"><label>البدلات (ريال)</label><input id="emp-allow" type="number" placeholder="0"></div></div>
+    <div class="field-row"><div class="field"><label>اسم البنك</label><input id="emp-bank" placeholder="البنك الأهلي"></div><div class="field"><label>رقم الآيبان</label><input id="emp-iban" placeholder="SA..."></div></div>
+    <div class="section-title">بيانات الطوارئ</div>
+    <div class="field-row"><div class="field"><label>اسم جهة الطوارئ</label><input id="emp-emer-name"></div><div class="field"><label>هاتف الطوارئ</label><input id="emp-emer-phone"></div></div>
+    <div class="field"><label>ملاحظات</label><textarea id="emp-notes"></textarea></div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('empModal')">إلغاء</button><button class="btn btn-primary" onclick="saveEmployee()">حفظ</button></div>
+  </div>
+</div>
+
+<!-- Department Modal -->
+<div class="modal-overlay" id="deptModal">
+  <div class="modal">
+    <div class="modal-header"><h3 id="deptModalTitle">إضافة قسم</h3><button class="modal-close" onclick="closeModal('deptModal')">✕</button></div>
+    <input type="hidden" id="dept-id">
+    <div class="field-row"><div class="field"><label>اسم القسم *</label><input id="dept-name" placeholder="تقنية المعلومات"></div><div class="field"><label>الكود</label><input id="dept-code" placeholder="IT"></div></div>
+    <div class="field"><label>الوصف</label><textarea id="dept-desc" rows="3"></textarea></div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('deptModal')">إلغاء</button><button class="btn btn-primary" onclick="saveDepartment()">حفظ</button></div>
+  </div>
+</div>
+
+<!-- Client Modal -->
+<div class="modal-overlay" id="clientModal">
+  <div class="modal modal-lg">
+    <div class="modal-header"><h3 id="clientModalTitle">إضافة عميل جديد</h3><button class="modal-close" onclick="closeModal('clientModal')">✕</button></div>
+    <input type="hidden" id="cli-id">
+    <div class="section-title">بيانات الشركة</div>
+    <div class="field-row"><div class="field"><label>كود العميل *</label><input id="cli-code" placeholder="CLT-001"></div><div class="field"><label>اسم الشركة *</label><input id="cli-name" placeholder="شركة الأمثل للتقنية"></div></div>
+    <div class="field-row"><div class="field"><label>القطاع / الصناعة</label><input id="cli-industry" placeholder="تقنية المعلومات"></div><div class="field"><label>نوع العميل</label><select id="cli-type"><option value="corporate">شركة</option><option value="government">حكومي</option><option value="individual">فرد</option><option value="ngo">منظمة</option></select></div></div>
+    <div class="field-row"><div class="field"><label>رقم السجل التجاري</label><input id="cli-cr" placeholder="1010xxxxxx"></div><div class="field"><label>الرقم الضريبي</label><input id="cli-tax" placeholder="3xxxxxxxxx"></div></div>
+    <div class="field-row"><div class="field"><label>المدينة</label><input id="cli-city" placeholder="الرياض"></div><div class="field"><label>الحالة</label><select id="cli-status"><option value="active">نشط</option><option value="prospect">محتمل</option><option value="inactive">غير نشط</option><option value="suspended">موقوف</option></select></div></div>
+    <div class="field"><label>الموقع الإلكتروني</label><input id="cli-web" placeholder="https://..."></div>
+    <div class="section-title">جهة التواصل الرئيسية</div>
+    <div class="field-row"><div class="field"><label>الاسم</label><input id="cli-cname" placeholder="أحمد محمد"></div><div class="field"><label>المسمى الوظيفي</label><input id="cli-ctitle" placeholder="مدير المشاريع"></div></div>
+    <div class="field-row"><div class="field"><label>البريد</label><input id="cli-cemail" type="email"></div><div class="field"><label>الجوال</label><input id="cli-cphone" placeholder="05xxxxxxxx"></div></div>
+    <div class="section-title">بيانات العقد</div>
+    <div class="field-row"><div class="field"><label>بداية العقد</label><input id="cli-cstart" type="date"></div><div class="field"><label>نهاية العقد</label><input id="cli-cend" type="date"></div></div>
+    <div class="field-row"><div class="field"><label>قيمة العقد (ريال)</label><input id="cli-cval" type="number" placeholder="0"></div><div class="field"><label>شروط الدفع</label><input id="cli-pay" value="30 يوم"></div></div>
+    <div class="field"><label>ملاحظات</label><textarea id="cli-notes"></textarea></div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('clientModal')">إلغاء</button><button class="btn btn-primary" onclick="saveClient()">حفظ</button></div>
+  </div>
+</div>
+
+<!-- Disclosure Modal -->
+<div class="modal-overlay" id="discModal">
+  <div class="modal modal-lg">
+    <div class="modal-header"><h3 id="discModalTitle">إنشاء إفصاح جديد</h3><button class="modal-close" onclick="closeModal('discModal')">✕</button></div>
+    <input type="hidden" id="disc-id">
+    <div class="field"><label>العنوان *</label><input id="disc-title" placeholder="عنوان الإفصاح"></div>
+    <div class="field-row">
+      <div class="field"><label>الفئة</label><select id="disc-cat"><option value="general">عام</option><option value="financial">مالي</option><option value="operational">تشغيلي</option><option value="legal">قانوني</option><option value="hr">موارد بشرية</option><option value="technical">تقني</option><option value="strategic">استراتيجي</option><option value="urgent">عاجل</option></select></div>
+      <div class="field"><label>الأهمية</label><select id="disc-imp"><option value="normal">عادي</option><option value="high">مهم</option><option value="critical">حرج</option><option value="low">منخفض</option></select></div>
+    </div>
+    <div class="field"><label>ملخص</label><input id="disc-summary" placeholder="ملخص قصير"></div>
+    <div class="field"><label>المحتوى *</label><textarea id="disc-content" rows="6" placeholder="نص الإفصاح الكامل..."></textarea></div>
+    <div class="field-row">
+      <div class="field"><label>تاريخ الانتهاء</label><input id="disc-expires" type="date"></div>
+      <div class="field" style="display:flex;align-items:flex-end;padding-bottom:2px;">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;">
+          <input type="checkbox" id="disc-publish" style="width:auto;padding:0;"> نشر فوراً
+        </label>
+      </div>
+    </div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('discModal')">إلغاء</button><button class="btn btn-primary" onclick="saveDisclosure()">حفظ</button></div>
+  </div>
+</div>
+
+<!-- Disclosure View Modal -->
+<div class="modal-overlay" id="discViewModal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div>
+        <h3 id="dv-title">—</h3>
+        <div style="display:flex;gap:8px;margin-top:6px;" id="dv-badges"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('discViewModal')">✕</button>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px;" id="dv-meta"></div>
+    <div id="dv-summary" style="background:#f8faf8;border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:12px;display:none;font-weight:600;"></div>
+    <div class="disc-content" id="dv-content"></div>
+    <div class="modal-actions" id="dv-actions"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1'?'http://127.0.0.1:8000':window.location.origin;
+const token = localStorage.getItem('munjaz_token');
+const H = {'Content-Type':'application/json','Authorization':'Bearer '+token};
+
+if(!token){window.location.href='/';}
+
+// Init
+const userName = localStorage.getItem('munjaz_name')||'المدير';
+document.getElementById('adminName').textContent = userName;
+document.getElementById('adminInitial').textContent = userName[0]||'م';
+
+let allUsers=[], allEmps=[], allClients=[], allDiscs=[], allDepts=[];
+let empStatusFilter='', empDeptFilter='', clientStatusFilter='', clientTypeFilter='', discCategoryFilter='';
+
+async function load(){
+  const u = await fetch(`${API}/auth/me`,{headers:H}).then(r=>r.json()).catch(()=>null);
+  if(!u || u.role !== 'admin'){alert('صلاحيات غير كافية');localStorage.clear();window.location.href='/';}
+  await loadOverview();
+}
+
+async function loadOverview(){
+  try{
+    const s = await fetch(`${API}/stats/overview`,{headers:H}).then(r=>r.json());
+    document.getElementById('ov-emp').textContent = s.employees.total||0;
+    document.getElementById('ov-emp-sub').textContent = `${s.employees.active} نشط • ${s.employees.on_leave} في إجازة`;
+    document.getElementById('ov-cli').textContent = s.clients.total||0;
+    document.getElementById('ov-cli-sub').textContent = `${s.clients.active} نشط • ${s.clients.prospect} محتمل`;
+    document.getElementById('ov-disc').textContent = s.disclosures.total||0;
+    document.getElementById('ov-disc-sub').textContent = `${s.disclosures.published} منشور`;
+    document.getElementById('ov-users').textContent = s.users.total||0;
+    document.getElementById('ov-users-sub').textContent = `${s.users.active} نشط • ${s.users.admins} مدير`;
+    document.getElementById('ov-anal').textContent = s.analyses.total||0;
+    document.getElementById('ov-anal-sub').textContent = `متوسط الدرجة: ${s.analyses.avg_score}`;
+    // Activity feed
+    const feed = document.getElementById('activityFeed');
+    if(!s.recent_activity||!s.recent_activity.length){feed.innerHTML='<div class="empty-state"><span class="ei">📭</span><p>لا توجد نشاطات</p></div>';return;}
+    feed.innerHTML = s.recent_activity.map(a=>`
+      <div class="activity-item">
+        <div class="act-icon">${actIcon(a.entity_type)}</div>
+        <div><div class="act-text">${a.action}</div><div class="act-sub">${a.profiles?.full_name||'—'} • ${formatDate(a.created_at)}</div></div>
+      </div>`).join('');
+  }catch(e){console.error(e);}
+}
+
+function actIcon(t){return{employees:'👷',clients:'🤝',disclosures:'📢',profiles:'👥',analyses:'📋'}[t]||'📝';}
+
+// ── USERS ──
+async function loadUsers(){
+  const r = await fetch(`${API}/users/`,{headers:H}).then(r=>r.json()).catch(()=>[]);
+  allUsers = r; renderUsers(r);
+}
+function renderUsers(users){
+  const tb = document.getElementById('usersTbody');
+  if(!users.length){tb.innerHTML='<tr><td colspan="8"><div class="empty-state"><span class="ei">👥</span><p>لا يوجد مستخدمون</p></div></td></tr>';return;}
+  tb.innerHTML = users.map(u=>`<tr>
+    <td><strong>${u.full_name}</strong></td>
+    <td class="td-mono">${u.email}</td>
+    <td>${u.company||'—'}</td>
+    <td>${u.department||'—'}</td>
+    <td><span class="badge b-${u.role}">${{admin:'مدير',manager:'مشرف',user:'مستخدم'}[u.role]||u.role}</span></td>
+    <td><span class="badge b-${u.is_active?'active':'inactive'}">${u.is_active?'نشط':'معطّل'}</span></td>
+    <td class="td-muted">${u.last_login?formatDate(u.last_login):'لم يدخل'}</td>
+    <td><div class="btn-group">
+      <button class="btn btn-sm btn-warning" onclick="showResetPass('${u.id}')">🔑</button>
+      ${u.role!=='admin'?`<button class="btn btn-sm ${u.is_active?'btn-danger':'btn-ghost'}" onclick="toggleUser('${u.id}')">${u.is_active?'تعطيل':'تفعيل'}</button>`:''}
+      ${u.role!=='admin'?`<button class="btn btn-sm btn-danger" onclick="deleteUser('${u.id}')">🗑</button>`:''}
+    </div></td>
+  </tr>`).join('');
+}
+function filterUsers(q){renderUsers(allUsers.filter(u=>u.full_name.includes(q)||u.email.includes(q)||(u.company||'').includes(q)));}
+function showAddUser(){document.getElementById('addUserModal').classList.add('show');}
+async function createUser(){
+  const d={full_name:v('nu-name'),email:v('nu-email'),company:v('nu-company'),department:v('nu-dept'),phone:v('nu-phone'),role:v('nu-role'),password:v('nu-pass')};
+  if(!d.full_name||!d.email||!d.password){toast('يرجى ملء الحقول المطلوبة','error');return;}
+  const r=await fetch(`${API}/users/`,{method:'POST',headers:H,body:JSON.stringify(d)});
+  const rs=await r.json();
+  if(!r.ok){toast(rs.detail||'خطأ','error');return;}
+  toast('تم إنشاء الحساب ✅'); closeModal('addUserModal'); loadUsers();
+}
+function showResetPass(uid){document.getElementById('rp-uid').value=uid;document.getElementById('rp-pass').value='';document.getElementById('resetPassModal').classList.add('show');}
+async function doResetPass(){
+  const uid=document.getElementById('rp-uid').value, p=document.getElementById('rp-pass').value;
+  if(!p||p.length<6){toast('6 أحرف على الأقل','error');return;}
+  const r=await fetch(`${API}/users/${uid}/reset-password`,{method:'PUT',headers:H,body:JSON.stringify({new_password:p})});
+  const rs=await r.json(); if(!r.ok){toast(rs.detail||'خطأ','error');return;}
+  toast('تم تعيين كلمة سر جديدة ✅'); closeModal('resetPassModal');
+}
+async function toggleUser(uid){
+  const r=await fetch(`${API}/users/${uid}/toggle`,{method:'PUT',headers:H});
+  const rs=await r.json(); if(!r.ok){toast(rs.detail||'خطأ','error');return;}
+  toast(rs.message+' ✅'); loadUsers();
+}
+async function deleteUser(uid){
+  if(!confirm('هل تريد حذف هذا المستخدم؟'))return;
+  await fetch(`${API}/users/${uid}`,{method:'DELETE',headers:H});
+  toast('تم الحذف'); loadUsers();
+}
+
+// ── DEPARTMENTS ──
+async function loadDepartments(){
+  const r=await fetch(`${API}/departments/`,{headers:H}).then(r=>r.json()).catch(()=>[]);
+  allDepts=r; renderDepts(r); populateDeptDropdowns(r);
+}
+function renderDepts(depts){
+  const tb=document.getElementById('deptTbody');
+  if(!depts.length){tb.innerHTML='<tr><td colspan="5"><div class="empty-state"><span class="ei">🏢</span><p>لا توجد أقسام</p></div></td></tr>';return;}
+  tb.innerHTML=depts.map(d=>`<tr>
+    <td><strong>${d.name}</strong></td>
+    <td class="td-mono">${d.code||'—'}</td>
+    <td>${d.profiles?.full_name||'—'}</td>
+    <td class="td-muted">${d.description||'—'}</td>
+    <td><div class="btn-group">
+      <button class="btn btn-sm btn-warning" onclick="editDept(${JSON.stringify(d).replace(/"/g,'&quot;')})">تعديل</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteDept('${d.id}')">حذف</button>
+    </div></td>
+  </tr>`).join('');
+}
+function populateDeptDropdowns(depts){
+  const selects = [document.getElementById('emp-dept'), document.getElementById('deptFilter')];
+  selects.forEach(s=>{
+    if(!s)return;
+    const base = s.id==='deptFilter'?'<option value="">كل الأقسام</option>':'<option value="">اختر القسم</option>';
+    s.innerHTML = base + depts.map(d=>`<option value="${d.id}">${d.name}</option>`).join('');
+  });
+}
+function openDeptModal(){document.getElementById('deptModalTitle').textContent='إضافة قسم جديد';['dept-id','dept-name','dept-code','dept-desc'].forEach(id=>setV(id,''));document.getElementById('deptModal').classList.add('show');}
+function editDept(d){document.getElementById('deptModalTitle').textContent='تعديل القسم';setV('dept-id',d.id);setV('dept-name',d.name);setV('dept-code',d.code||'');setV('dept-desc',d.description||'');document.getElementById('deptModal').classList.add('show');}
+async function saveDepartment(){
+  const did=v('dept-id'), data={name:v('dept-name'),code:v('dept-code'),description:v('dept-desc')};
+  if(!data.name){toast('أدخل اسم القسم','error');return;}
+  const url=did?`${API}/departments/${did}`:`${API}/departments/`, method=did?'PUT':'POST';
+  const r=await fetch(url,{method,headers:H,body:JSON.stringify(data)});
+  const rs=await r.json(); if(!r.ok){toast(rs.detail||'خطأ','error');return;}
+  toast('تم الحفظ ✅'); closeModal('deptModal'); loadDepartments();
+}
+async function deleteDept(id){
+  if(!confirm('حذف القسم؟'))return;
+  await fetch(`${API}/departments/${id}`,{method:'DELETE',headers:H});
+  toast('تم الحذف'); loadDepartments();
+}
+
+// ── EMPLOYEES ──
+async function loadEmployees(){
+  const [stats,emps]=await Promise.all([
+    fetch(`${API}/employees/stats`,{headers:H}).then(r=>r.json()).catch(()=>({})),
+    fetch(`${API}/employees/`,{headers:H}).then(r=>r.json()).catch(()=>[])
+  ]);
+  document.getElementById('es-active').textContent=stats.active||0;
+  document.getElementById('es-leave').textContent=stats.on_leave||0;
+  document.getElementById('es-salary').textContent=numFmt(stats.total_salary||0);
+  document.getElementById('es-saudi').textContent=(stats.saudization||0)+'%';
+  allEmps=emps; renderEmployees(emps);
+}
+function renderEmployees(emps){
+  const tb=document.getElementById('empTbody');
+  if(!emps.length){tb.innerHTML='<tr><td colspan="8"><div class="empty-state"><span class="ei">👷</span><p>لا يوجد موظفون</p></div></td></tr>';return;}
+  tb.innerHTML=emps.map(e=>`<tr>
+    <td><strong>${e.full_name}</strong><br><span class="td-mono" style="font-size:11px">${e.employee_number}</span></td>
+    <td>${e.departments?.name||'—'}</td>
+    <td>${e.position}</td>
+    <td><span class="badge b-${e.employment_type}">${empTypeAr(e.employment_type)}</span></td>
+    <td class="td-mono">${e.basic_salary?numFmt(e.basic_salary):'—'}</td>
+    <td><span class="badge b-${e.status}">${empStatusAr(e.status)}</span></td>
+    <td class="td-muted">${e.hire_date?new Date(e.hire_date).toLocaleDateString('ar-SA'):'—'}</td>
+    <td><div class="btn-group">
+      <button class="btn btn-sm btn-ghost" onclick="viewEmployee('${e.id}')">عرض</button>
+      <button class="btn btn-sm btn-warning" onclick="editEmployee('${e.id}')">تعديل</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteEmployee('${e.id}')">🗑</button>
+    </div></td>
+  </tr>`).join('');
+}
+function filterEmployees(q){
+  const f=allEmps.filter(e=>e.full_name.includes(q)||e.employee_number.includes(q)||(e.position||'').includes(q));
+  applyEmpFilters(f);
+}
+function filterEmpByStatus(s){empStatusFilter=s;applyEmpFilters(allEmps);}
+function filterEmpByDept(d){empDeptFilter=d;applyEmpFilters(allEmps);}
+function applyEmpFilters(base){
+  let f=base;
+  if(empStatusFilter) f=f.filter(e=>e.status===empStatusFilter);
+  if(empDeptFilter) f=f.filter(e=>e.department_id===empDeptFilter);
+  renderEmployees(f);
+}
+
+function openEmpModal(emp=null){
+  document.getElementById('empModalTitle').textContent=emp?'تعديل بيانات الموظف':'إضافة موظف جديد';
+  const ids=['emp-id','emp-number','emp-name','emp-arabic','emp-email','emp-phone','emp-nid','emp-nat','emp-pos','emp-grade','emp-salary','emp-allow','emp-bank','emp-iban','emp-emer-name','emp-emer-phone','emp-notes','emp-hire','emp-end'];
+  ids.forEach(id=>setV(id,''));setV('emp-nat','سعودي');
+  setV('emp-gender','');setV('emp-type','full_time');setV('emp-status','active');setV('emp-dept','');
+  if(emp){
+    setV('emp-id',emp.id||'');setV('emp-number',emp.employee_number||'');setV('emp-name',emp.full_name||'');
+    setV('emp-arabic',emp.arabic_name||'');setV('emp-email',emp.email||'');setV('emp-phone',emp.phone||'');
+    setV('emp-nid',emp.national_id||emp.iqama_number||'');setV('emp-nat',emp.nationality||'سعودي');
+    setV('emp-pos',emp.position||'');setV('emp-grade',emp.grade||'');setV('emp-type',emp.employment_type||'full_time');
+    setV('emp-status',emp.status||'active');setV('emp-dept',emp.department_id||'');setV('emp-gender',emp.gender||'');
+    setV('emp-hire',emp.hire_date||'');setV('emp-end',emp.end_date||'');
+    setV('emp-salary',emp.basic_salary||'');setV('emp-allow',emp.allowances||'');
+    setV('emp-bank',emp.bank_name||'');setV('emp-iban',emp.iban||'');
+    setV('emp-emer-name',emp.emergency_name||'');setV('emp-emer-phone',emp.emergency_phone||'');
+    setV('emp-notes',emp.notes||'');
+  }
+  document.getElementById('empModal').classList.add('show');
+}
+
+async function editEmployee(eid){
+  const e=await fetch(`${API}/employees/${eid}`,{headers:H}).then(r=>r.json()).catch(()=>null);
+  if(e) openEmpModal(e);
+}
+
+async function viewEmployee(eid){
+  const e=await fetch(`${API}/employees/${eid}`,{headers:H}).then(r=>r.json()).catch(()=>null);
+  if(!e){toast('تعذر التحميل','error');return;}
+  alert(`الموظف: ${e.full_name}\nالرقم: ${e.employee_number}\nالمسمى: ${e.position}\nالقسم: ${e.departments?.name||'—'}\nالراتب: ${numFmt(e.basic_salary||0)} ريال\nالحالة: ${empStatusAr(e.status)}`);
+}
+
+async function saveEmployee(){
+  const eid=v('emp-id');
+  const data={employee_number:v('emp-number'),full_name:v('emp-name'),arabic_name:v('emp-arabic'),email:v('emp-email'),phone:v('emp-phone'),national_id:v('emp-nid'),nationality:v('emp-nat'),department_id:v('emp-dept')||null,position:v('emp-pos'),grade:v('emp-grade'),employment_type:v('emp-type'),status:v('emp-status'),gender:v('emp-gender')||null,hire_date:v('emp-hire')||null,end_date:v('emp-end')||null,basic_salary:parseFloat(v('emp-salary'))||null,allowances:parseFloat(v('emp-allow'))||0,bank_name:v('emp-bank'),iban:v('emp-iban'),emergency_name:v('emp-emer-name'),emergency_phone:v('emp-emer-phone'),notes:v('emp-notes')};
+  if(!data.employee_number||!data.full_name||!data.position){toast('أدخل رقم الموظف والاسم والمسمى','error');return;}
+  const url=eid?`${API}/employees/${eid}`:`${API}/employees/`, method=eid?'PUT':'POST';
+  const r=await fetch(url,{method,headers:H,body:JSON.stringify(data)});
+  const rs=await r.json(); if(!r.ok){toast(rs.detail||'خطأ','error');return;}
+  toast('تم الحفظ ✅'); closeModal('empModal'); loadEmployees();
+}
+
+async function deleteEmployee(eid){
+  if(!confirm('هل تريد حذف هذا الموظف؟'))return;
+  await fetch(`${API}/employees/${eid}`,{method:'DELETE',headers:H});
+  toast('تم الحذف'); loadEmployees();
+}
+
+// ── CLIENTS ──
+async function loadClients(){
+  const [stats,clients]=await Promise.all([
+    fetch(`${API}/clients/stats`,{headers:H}).then(r=>r.json()).catch(()=>({})),
+    fetch(`${API}/clients/`,{headers:H}).then(r=>r.json()).catch(()=>[])
+  ]);
+  document.getElementById('cs-active').textContent=stats.active||0;
+  document.getElementById('cs-prospect').textContent=stats.prospect||0;
+  document.getElementById('cs-gov').textContent=(stats.by_type?.government||0);
+  document.getElementById('cs-value').textContent=numFmt(stats.total_contract_value||0);
+  allClients=clients; renderClients(clients);
+}
+function renderClients(clients){
+  const tb=document.getElementById('clientTbody');
+  if(!clients.length){tb.innerHTML='<tr><td colspan="7"><div class="empty-state"><span class="ei">🤝</span><p>لا يوجد عملاء</p></div></td></tr>';return;}
+  tb.innerHTML=clients.map(c=>`<tr>
+    <td><strong>${c.company_name}</strong><br><span class="td-mono" style="font-size:11px">${c.client_code}</span></td>
+    <td><span class="badge b-${c.client_type}">${clientTypeAr(c.client_type)}</span></td>
+    <td class="td-muted">${c.industry||'—'}</td>
+    <td>${c.contact_name||'—'}<br><span class="td-muted">${c.contact_phone||''}</span></td>
+    <td class="td-mono">${c.contract_value?numFmt(c.contract_value):'—'}</td>
+    <td><span class="badge b-${c.status}">${clientStatusAr(c.status)}</span></td>
+    <td><div class="btn-group">
+      <button class="btn btn-sm btn-ghost" onclick="viewClient('${c.id}')">عرض</button>
+      <button class="btn btn-sm btn-warning" onclick="editClient('${c.id}')">تعديل</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteClient('${c.id}')">🗑</button>
+    </div></td>
+  </tr>`).join('');
+}
+function filterClients(q){applyClientFilters(allClients.filter(c=>c.company_name.includes(q)||c.client_code.includes(q)||(c.contact_name||'').includes(q)));}
+function filterClientByStatus(s){clientStatusFilter=s;applyClientFilters(allClients);}
+function filterClientByType(t){clientTypeFilter=t;applyClientFilters(allClients);}
+function applyClientFilters(base){
+  let f=base;
+  if(clientStatusFilter) f=f.filter(c=>c.status===clientStatusFilter);
+  if(clientTypeFilter) f=f.filter(c=>c.client_type===clientTypeFilter);
+  renderClients(f);
+}
+
+function openClientModal(cli=null){
+  document.getElementById('clientModalTitle').textContent=cli?'تعديل بيانات العميل':'إضافة عميل جديد';
+  ['cli-id','cli-code','cli-name','cli-industry','cli-cr','cli-tax','cli-city','cli-web','cli-cname','cli-ctitle','cli-cemail','cli-cphone','cli-cstart','cli-cend','cli-cval','cli-pay','cli-notes'].forEach(id=>setV(id,''));
+  setV('cli-type','corporate');setV('cli-status','active');setV('cli-pay','30 يوم');
+  if(cli){
+    setV('cli-id',cli.id||'');setV('cli-code',cli.client_code||'');setV('cli-name',cli.company_name||'');
+    setV('cli-industry',cli.industry||'');setV('cli-type',cli.client_type||'corporate');setV('cli-status',cli.status||'active');
+    setV('cli-cr',cli.cr_number||'');setV('cli-tax',cli.tax_number||'');setV('cli-city',cli.city||'');
+    setV('cli-web',cli.website||'');setV('cli-cname',cli.contact_name||'');setV('cli-ctitle',cli.contact_title||'');
+    setV('cli-cemail',cli.contact_email||'');setV('cli-cphone',cli.contact_phone||'');
+    setV('cli-cstart',cli.contract_start||'');setV('cli-cend',cli.contract_end||'');
+    setV('cli-cval',cli.contract_value||'');setV('cli-pay',cli.payment_terms||'30 يوم');
+    setV('cli-notes',cli.notes||'');
+  }
+  document.getElementById('clientModal').classList.add('show');
+}
+async function editClient(cid){
+  const c=await fetch(`${API}/clients/${cid}`,{headers:H}).then(r=>r.json()).catch(()=>null);
+  if(c) openClientModal(c);
+}
+async function viewClient(cid){
+  const c=await fetch(`${API}/clients/${cid}`,{headers:H}).then(r=>r.json()).catch(()=>null);
+  if(!c){toast('تعذر التحميل','error');return;}
+  alert(`العميل: ${c.company_name}\nالكود: ${c.client_code}\nالنوع: ${clientTypeAr(c.client_type)}\nالقطاع: ${c.industry||'—'}\nجهة التواصل: ${c.contact_name||'—'}\nالجوال: ${c.contact_phone||'—'}\nقيمة العقد: ${c.contract_value?numFmt(c.contract_value)+' ريال':'—'}\nالحالة: ${clientStatusAr(c.status)}`);
+}
+async function saveClient(){
+  const cid=v('cli-id');
+  const data={client_code:v('cli-code'),company_name:v('cli-name'),industry:v('cli-industry')||null,client_type:v('cli-type'),status:v('cli-status'),cr_number:v('cli-cr')||null,tax_number:v('cli-tax')||null,city:v('cli-city'),website:v('cli-web')||null,contact_name:v('cli-cname')||null,contact_title:v('cli-ctitle')||null,contact_email:v('cli-cemail')||null,contact_phone:v('cli-cphone')||null,contract_start:v('cli-cstart')||null,contract_end:v('cli-cend')||null,contract_value:parseFloat(v('cli-cval'))||null,payment_terms:v('cli-pay'),notes:v('cli-notes')||null};
+  if(!data.client_code||!data.company_name){toast('أدخل كود واسم العميل','error');return;}
+  const url=cid?`${API}/clients/${cid}`:`${API}/clients/`, method=cid?'PUT':'POST';
+  const r=await fetch(url,{method,headers:H,body:JSON.stringify(data)});
+  const rs=await r.json(); if(!r.ok){toast(rs.detail||'خطأ','error');return;}
+  toast('تم الحفظ ✅'); closeModal('clientModal'); loadClients();
+}
+async function deleteClient(cid){
+  if(!confirm('هل تريد حذف هذا العميل؟'))return;
+  await fetch(`${API}/clients/${cid}`,{method:'DELETE',headers:H});
+  toast('تم الحذف'); loadClients();
+}
+
+// ── DISCLOSURES ──
+async function loadDisclosures(){
+  const r=await fetch(`${API}/disclosures/`,{headers:H}).then(r=>r.json()).catch(()=>[]);
+  allDiscs=r; renderDiscs(r);
+}
+function renderDiscs(discs){
+  const tb=document.getElementById('discTbody');
+  if(!discs.length){tb.innerHTML='<tr><td colspan="8"><div class="empty-state"><span class="ei">📢</span><p>لا توجد إفصاحات</p></div></td></tr>';return;}
+  tb.innerHTML=discs.map(d=>`<tr>
+    <td><strong>${d.title}</strong>${d.summary?`<br><span class="td-muted">${d.summary.substring(0,50)}...</span>`:''}</td>
+    <td><span class="badge b-${d.category}">${discCatAr(d.category)}</span></td>
+    <td><span class="badge imp-${d.importance}">${discImpAr(d.importance)}</span></td>
+    <td><span class="badge ${d.is_published?'b-published':'b-draft'}">${d.is_published?'منشور':'مسودة'}</span></td>
+    <td class="td-mono">${d.views_count||0}</td>
+    <td class="td-muted">${d.profiles?.full_name||'—'}</td>
+    <td class="td-muted">${formatDate(d.created_at)}</td>
+    <td><div class="btn-group">
+      <button class="btn btn-sm btn-ghost" onclick="viewDisc('${d.id}')">عرض</button>
+      <button class="btn btn-sm btn-warning" onclick="editDisc(${JSON.stringify(d).replace(/"/g,'&quot;')})">تعديل</button>
+      ${d.is_published?`<button class="btn btn-sm btn-ghost" onclick="toggleDiscPublish('${d.id}',false)">إلغاء نشر</button>`:`<button class="btn btn-sm btn-green" onclick="toggleDiscPublish('${d.id}',true)">نشر</button>`}
+      <button class="btn btn-sm btn-danger" onclick="deleteDisc('${d.id}')">🗑</button>
+    </div></td>
+  </tr>`).join('');
+}
+function filterDiscByCategory(cat){discCategoryFilter=cat;renderDiscs(cat?allDiscs.filter(d=>d.category===cat):allDiscs);}
+
+function openDiscModal(){
+  document.getElementById('discModalTitle').textContent='إنشاء إفصاح جديد';
+  ['disc-id','disc-title','disc-summary','disc-content','disc-expires'].forEach(id=>setV(id,''));
+  setV('disc-cat','general');setV('disc-imp','normal');
+  document.getElementById('disc-publish').checked=false;
+  document.getElementById('discModal').classList.add('show');
+}
+function editDisc(d){
+  document.getElementById('discModalTitle').textContent='تعديل الإفصاح';
+  setV('disc-id',d.id);setV('disc-title',d.title);setV('disc-summary',d.summary||'');
+  setV('disc-content',d.content);setV('disc-cat',d.category);setV('disc-imp',d.importance);
+  setV('disc-expires',d.expires_at?d.expires_at.split('T')[0]:'');
+  document.getElementById('disc-publish').checked=d.is_published;
+  document.getElementById('discModal').classList.add('show');
+}
+async function viewDisc(did){
+  const d=await fetch(`${API}/disclosures/${did}`,{headers:H}).then(r=>r.json()).catch(()=>null);
+  if(!d){toast('تعذر التحميل','error');return;}
+  document.getElementById('dv-title').textContent=d.title;
+  document.getElementById('dv-badges').innerHTML=`<span class="badge b-${d.category}">${discCatAr(d.category)}</span><span class="badge imp-${d.importance}">${discImpAr(d.importance)}</span><span class="badge ${d.is_published?'b-published':'b-draft'}">${d.is_published?'منشور':'مسودة'}</span>`;
+  document.getElementById('dv-meta').textContent=`بواسطة: ${d.profiles?.full_name||'—'} • ${formatDate(d.created_at)} • ${d.views_count||0} مشاهدة`;
+  const sumDiv=document.getElementById('dv-summary');
+  if(d.summary){sumDiv.textContent=d.summary;sumDiv.style.display='block';}else sumDiv.style.display='none';
+  document.getElementById('dv-content').textContent=d.content;
+  document.getElementById('dv-actions').innerHTML=`
+    <button class="btn btn-ghost" onclick="closeModal('discViewModal')">إغلاق</button>
+    <button class="btn btn-warning" onclick="closeModal('discViewModal');editDisc(${JSON.stringify(d).replace(/"/g,'&quot;')})">تعديل</button>
+    ${d.is_published?`<button class="btn btn-danger" onclick="closeModal('discViewModal');toggleDiscPublish('${d.id}',false)">إلغاء النشر</button>`:`<button class="btn btn-green" onclick="closeModal('discViewModal');toggleDiscPublish('${d.id}',true)">نشر الآن</button>`}`;
+  document.getElementById('discViewModal').classList.add('show');
+}
+async function saveDisclosure(){
+  const did=v('disc-id');
+  const data={title:v('disc-title'),content:v('disc-content'),summary:v('disc-summary')||null,category:v('disc-cat'),importance:v('disc-imp'),is_published:document.getElementById('disc-publish').checked,expires_at:v('disc-expires')||null};
+  if(!data.title||!data.content){toast('العنوان والمحتوى مطلوبان','error');return;}
+  const url=did?`${API}/disclosures/${did}`:`${API}/disclosures/`, method=did?'PUT':'POST';
+  const r=await fetch(url,{method,headers:H,body:JSON.stringify(data)});
+  const rs=await r.json(); if(!r.ok){toast(rs.detail||'خطأ','error');return;}
+  toast('تم الحفظ ✅'); closeModal('discModal'); loadDisclosures();
+}
+async function toggleDiscPublish(did,publish){
+  const ep=publish?'publish':'unpublish';
+  await fetch(`${API}/disclosures/${did}/${ep}`,{method:'PUT',headers:H});
+  toast(publish?'تم النشر ✅':'تم إلغاء النشر'); loadDisclosures();
+}
+async function deleteDisc(did){
+  if(!confirm('حذف الإفصاح؟'))return;
+  await fetch(`${API}/disclosures/${did}`,{method:'DELETE',headers:H});
+  toast('تم الحذف'); loadDisclosures();
+}
+
+// ── ANALYSES ──
+async function loadAnalyses(){
+  const r=await fetch(`${API}/analyses/`,{headers:H}).then(r=>r.json()).catch(()=>[]);
+  const tb=document.getElementById('analysesTbody');
+  if(!r.length){tb.innerHTML='<tr><td colspan="6"><div class="empty-state"><span class="ei">📋</span><p>لا توجد تحليلات</p></div></td></tr>';return;}
+  tb.innerHTML=r.map(a=>`<tr>
+    <td><strong>${a.filename}</strong><br><span class="td-muted">${a.pages||0} صفحة</span></td>
+    <td>${a.profiles?.full_name||'—'}<br><span class="td-muted">${a.profiles?.company||''}</span></td>
+    <td><span class="badge b-${(a.verdict||'').toUpperCase()}">${verdictAr(a.verdict)}</span></td>
+    <td><span class="score-mini"><span class="score-dot" style="background:${scoreColor(a.score)}"></span>${a.score||0}</span></td>
+    <td class="td-muted">${formatDate(a.created_at)}</td>
+    <td><button class="btn btn-sm btn-danger" onclick="deleteAnalysis('${a.id}')">🗑</button></td>
+  </tr>`).join('');
+}
+async function deleteAnalysis(aid){
+  if(!confirm('حذف التحليل؟'))return;
+  await fetch(`${API}/analyses/${aid}`,{method:'DELETE',headers:H});
+  toast('تم الحذف'); loadAnalyses();
+}
+
+// ── ACTIVITY ──
+async function loadActivity(){
+  const s=await fetch(`${API}/stats/overview`,{headers:H}).then(r=>r.json()).catch(()=>({}));
+  const el=document.getElementById('fullActivityLog');
+  if(!s.recent_activity||!s.recent_activity.length){el.innerHTML='<div class="empty-state"><span class="ei">📭</span><p>لا توجد نشاطات</p></div>';return;}
+  el.innerHTML=s.recent_activity.map(a=>`
+    <div class="activity-item">
+      <div class="act-icon">${actIcon(a.entity_type)}</div>
+      <div><div class="act-text">${a.action}</div><div class="act-sub">${a.profiles?.full_name||'—'} • ${formatDate(a.created_at)}</div></div>
+    </div>`).join('');
+}
+
+// ── PAGE NAV ──
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>{if(n.getAttribute('onclick')===`showPage('${name}')`) n.classList.add('active');});
+  const loaders={overview:loadOverview,users:loadUsers,employees:loadEmployees,departments:loadDepartments,clients:loadClients,disclosures:loadDisclosures,analyses:loadAnalyses,activity:loadActivity};
+  if(loaders[name]) loaders[name]();
+}
+
+// ── HELPERS ──
+function v(id){const el=document.getElementById(id);return el?el.value.trim():'';}
+function setV(id,val){const el=document.getElementById(id);if(el)el.value=val;}
+function closeModal(id){document.getElementById(id).classList.remove('show');}
+function logout(){localStorage.clear();window.location.href='/';}
+function formatDate(d){if(!d)return'—';return new Date(d).toLocaleDateString('ar-SA',{year:'numeric',month:'short',day:'numeric'});}
+function numFmt(n){return Number(n).toLocaleString('ar-SA');}
+function verdictAr(v){return{PROCEED:'المضي قدماً',CLARIFY:'طلب توضيحات',RISK:'مخاطر عالية'}[v]||v||'—';}
+function scoreColor(s){return s>=75?'#22a34e':s>=50?'#d97706':'#dc2626';}
+function empTypeAr(t){return{full_time:'دوام كامل',part_time:'جزئي',contract:'عقد',intern:'تدريب'}[t]||t;}
+function empStatusAr(s){return{active:'نشط',inactive:'غير نشط',on_leave:'إجازة',terminated:'منتهي'}[s]||s;}
+function clientTypeAr(t){return{corporate:'شركة',government:'حكومي',individual:'فرد',ngo:'منظمة'}[t]||t;}
+function clientStatusAr(s){return{active:'نشط',inactive:'غير نشط',prospect:'محتمل',suspended:'موقوف'}[s]||s;}
+function discCatAr(c){return{general:'عام',financial:'مالي',operational:'تشغيلي',legal:'قانوني',hr:'موارد بشرية',technical:'تقني',strategic:'استراتيجي',urgent:'عاجل'}[c]||c;}
+function discImpAr(i){return{critical:'حرج',high:'مهم',normal:'عادي',low:'منخفض'}[i]||i;}
+
+let toastTimer;
+function toast(msg,type='success'){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast show'+(type==='error'?' error':'');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('show');}));
+
+load();
+</script>
+</body>
+</html>
