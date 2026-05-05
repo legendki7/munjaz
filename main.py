@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 SUPABASE_URL = os.getenv("SUPABASE_URL","https://qugtsmqjvxwicfyamlsb.supabase.co")
-SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 JWT_SECRET = os.getenv("JWT_SECRET","munjaz-secret-2025")
 JWT_ALGORITHM = "HS256"; JWT_EXPIRE_HOURS = 24
