@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 SUPABASE_URL = os.getenv("SUPABASE_URL","https://qugtsmqjvxwicfyamlsb.supabase.co")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 JWT_SECRET = os.getenv("JWT_SECRET","munjaz-secret-2025")
 JWT_ALGORITHM = "HS256"; JWT_EXPIRE_HOURS = 24
@@ -108,12 +108,18 @@ async def list_users(admin=Depends(require_admin)):
 
 @app.post("/users/")
 async def create_user(req: CreateUserReq, admin=Depends(require_admin)):
-    if supabase.table("profiles").select("id").eq("email", req.email.lower()).execute().data:
-        raise HTTPException(status_code=400, detail="البريد مسجل مسبقا")
-    uid = str(uuid.uuid4())
-    supabase.table("profiles").insert({"id":uid,"email":req.email.lower().strip(),"full_name":req.full_name,"company":req.company,"department":req.department,"phone":req.phone,"role":req.role,"password_hash":hash_password(req.password),"is_active":True}).execute()
-    log_activity(admin["id"],"انشاء مستخدم","profiles",uid)
-    return {"message":"تم انشاء الحساب","id":uid}
+    try:
+        if supabase.table("profiles").select("id").eq("email", req.email.lower()).execute().data:
+            raise HTTPException(status_code=400, detail="البريد مسجل مسبقا")
+        uid = str(uuid.uuid4())
+        supabase.table("profiles").insert({"id":uid,"email":req.email.lower().strip(),"full_name":req.full_name,"company":req.company,"department":req.department,"phone":req.phone,"role":req.role,"password_hash":hash_password(req.password),"is_active":True}).execute()
+        log_activity(admin["id"],"انشاء مستخدم","profiles",uid)
+        return {"message":"تم انشاء الحساب","id":uid}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print("CREATE USER ERROR:", str(e))
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.put("/users/{uid}")
 async def update_user(uid:str, req:UpdateUserReq, admin=Depends(require_admin)):
