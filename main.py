@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 SUPABASE_URL = os.getenv("SUPABASE_URL","https://qugtsmqjvxwicfyamlsb.supabase.co")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 JWT_SECRET = os.getenv("JWT_SECRET","munjaz-secret-2025")
 JWT_ALGORITHM = "HS256"; JWT_EXPIRE_HOURS = 24
@@ -59,13 +59,16 @@ def log_activity(uid, action, entity_type=None, entity_id=None, details=None):
     try: supabase.table("activity_log").insert({"user_id":uid,"action":action,"entity_type":entity_type,"entity_id":entity_id,"details":details or {}}).execute()
     except: pass
 
-@app.get("/") 
+@app.get("/")
 def serve_login():
     f = pathlib.Path("login.html")
     return FileResponse(str(f)) if f.exists() else {"message":"Munjaz v2.0"}
 
 @app.get("/dashboard")
 def serve_dashboard(): return FileResponse("index.html")
+
+@app.get("/landing")
+def serve_landing(): return FileResponse("landing.html")
 
 @app.get("/admin")
 def serve_admin(): return FileResponse("admin.html")
@@ -108,18 +111,12 @@ async def list_users(admin=Depends(require_admin)):
 
 @app.post("/users/")
 async def create_user(req: CreateUserReq, admin=Depends(require_admin)):
-    try:
-        if supabase.table("profiles").select("id").eq("email", req.email.lower()).execute().data:
-            raise HTTPException(status_code=400, detail="البريد مسجل مسبقا")
-        uid = str(uuid.uuid4())
-        supabase.table("profiles").insert({"id":uid,"email":req.email.lower().strip(),"full_name":req.full_name,"company":req.company,"department":req.department,"phone":req.phone,"role":req.role,"password_hash":hash_password(req.password),"is_active":True}).execute()
-        log_activity(admin["id"],"انشاء مستخدم","profiles",uid)
-        return {"message":"تم انشاء الحساب","id":uid}
-    except HTTPException:
-        raise
-    except Exception as e:
-        print("CREATE USER ERROR:", str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+    if supabase.table("profiles").select("id").eq("email", req.email.lower()).execute().data:
+        raise HTTPException(status_code=400, detail="البريد مسجل مسبقا")
+    uid = str(uuid.uuid4())
+    supabase.table("profiles").insert({"id":uid,"email":req.email.lower().strip(),"full_name":req.full_name,"company":req.company,"department":req.department,"phone":req.phone,"role":req.role,"password_hash":hash_password(req.password),"is_active":True}).execute()
+    log_activity(admin["id"],"انشاء مستخدم","profiles",uid)
+    return {"message":"تم انشاء الحساب","id":uid}
 
 @app.put("/users/{uid}")
 async def update_user(uid:str, req:UpdateUserReq, admin=Depends(require_admin)):
@@ -388,90 +385,539 @@ async def delete_analysis(aid:str, admin=Depends(require_admin)):
     supabase.table("analyses").delete().eq("id",aid).execute()
     return {"message":"تم الحذف"}
 
-ANALYZER_TOOLS=[{"type":"function","function":{"name":"extract_requirements","description":"استخرج متطلبات المناقصة","parameters":{"type":"object","properties":{"requirements":{"type":"array","items":{"type":"object","properties":{"req_id":{"type":"string"},"title":{"type":"string"},"description":{"type":"string"},"is_mandatory":{"type":"boolean"},"category":{"type":"string","enum":["technical","financial","legal","administrative","other"]}},"required":["req_id","title","description","is_mandatory","category"]}},"total_count":{"type":"integer"}},"required":["requirements","total_count"]}}},{"type":"function","function":{"name":"extract_deadlines","description":"استخرج المواعيد","parameters":{"type":"object","properties":{"deadlines":{"type":"array","items":{"type":"object","properties":{"deadline_id":{"type":"string"},"event":{"type":"string"},"date_text":{"type":"string"},"is_critical":{"type":"boolean"}},"required":["deadline_id","event","date_text","is_critical"]}}},"required":["deadlines"]}}},{"type":"function","function":{"name":"extract_documents","description":"استخرج المستندات","parameters":{"type":"object","properties":{"documents":{"type":"array","items":{"type":"object","properties":{"doc_id":{"type":"string"},"name":{"type":"string"},"is_mandatory":{"type":"boolean"},"notes":{"type":"string"}},"required":["doc_id","name","is_mandatory"]}},"total_count":{"type":"integer"}},"required":["documents","total_count"]}}}]
-COMPLIANCE_TOOLS=[{"type":"function","function":{"name":"check_gaps","description":"افحص الثغرات","parameters":{"type":"object","properties":{"gaps":{"type":"array","items":{"type":"object","properties":{"gap_id":{"type":"string"},"title":{"type":"string"},"description":{"type":"string"},"severity":{"type":"string","enum":["critical","major","minor"]}},"required":["gap_id","title","description","severity"]}},"completeness_score":{"type":"number"},"overall_assessment":{"type":"string"}},"required":["gaps","completeness_score","overall_assessment"]}}},{"type":"function","function":{"name":"check_ambiguities","description":"افحص الغموض","parameters":{"type":"object","properties":{"ambiguities":{"type":"array","items":{"type":"object","properties":{"amb_id":{"type":"string"},"clause":{"type":"string"},"issue":{"type":"string"},"impact":{"type":"string","enum":["high","medium","low"]}},"required":["amb_id","clause","issue","impact"]}}},"required":["ambiguities"]}}},{"type":"function","function":{"name":"check_conflicts","description":"افحص التعارضات","parameters":{"type":"object","properties":{"conflicts":{"type":"array","items":{"type":"object","properties":{"conflict_id":{"type":"string"},"clause_a":{"type":"string"},"clause_b":{"type":"string"},"description":{"type":"string"},"risk_level":{"type":"string","enum":["high","medium","low"]},"suggested_resolution":{"type":"string"}},"required":["conflict_id","clause_a","clause_b","description","risk_level","suggested_resolution"]}},"overall_risk":{"type":"string","enum":["high","medium","low","clear"]}},"required":["conflicts","overall_risk"]}}}]
-QA_TOOLS=[{"type":"function","function":{"name":"generate_formal_questions","description":"انشئ اسئلة استيضاح","parameters":{"type":"object","properties":{"questions":{"type":"array","items":{"type":"object","properties":{"number":{"type":"integer"},"category":{"type":"string","enum":["technical","financial","legal","administrative","timeline"]},"subject":{"type":"string"},"question_ar":{"type":"string"},"based_on":{"type":"string"},"priority":{"type":"string","enum":["urgent","important","normal"]}},"required":["number","category","subject","question_ar","priority"]}},"cover_letter_ar":{"type":"string"}},"required":["questions","cover_letter_ar"]}}}]
 
-def _run_agent(tools,messages,tool_names):
-    results={}
-    for tn in tool_names:
-        r=openai_client.chat.completions.create(model="gpt-4o-mini",max_tokens=2000,tools=tools,tool_choice={"type":"function","function":{"name":tn}},messages=messages)
-        msg=r.choices[0].message
-        if msg.tool_calls:
-            tc=msg.tool_calls[0]; args=json.loads(tc.function.arguments); results[tn]=args
-            messages.append({"role":"assistant","content":None,"tool_calls":[{"id":tc.id,"type":"function","function":{"name":tn,"arguments":tc.function.arguments}}]})
-            messages.append({"role":"tool","tool_call_id":tc.id,"content":json.dumps(args)})
-    return results
 
-def run_analyzer(text):
-    return _run_agent(ANALYZER_TOOLS,[{"role":"system","content":"انت محلل وثائق مناقصات. "+ARABIC_RULE},{"role":"user","content":"حلل هذه الوثيقة:\n\n"+text[:12000]}],["extract_requirements","extract_deadlines","extract_documents"])
+# ═══════════════════════════════════════════════════════════════
+# 10 AI AGENTS — منجز v3.1 — نظام استشاري متكامل
+# ═══════════════════════════════════════════════════════════════
+ARABIC_RULE = "قاعدة صارمة: جميع النصوص باللغة العربية حصراً."
 
-def run_compliance(text,analyzer):
-    ctx=json.dumps(analyzer,ensure_ascii=False)
-    return _run_agent(COMPLIANCE_TOOLS,[{"role":"system","content":"انت محلل امتثال. "+ARABIC_RULE},{"role":"user","content":"راجع:\n"+ctx+"\n\n"+text[:10000]}],["check_gaps","check_ambiguities","check_conflicts"])
+# ─── Tool Definitions ────────────────────────────────────────
 
-def run_qa(text,analyzer,compliance):
-    ctx=json.dumps({**analyzer,**compliance},ensure_ascii=False)
-    r=openai_client.chat.completions.create(model="gpt-4o-mini",max_tokens=3000,tools=QA_TOOLS,tool_choice={"type":"function","function":{"name":"generate_formal_questions"}},messages=[{"role":"system","content":"انت خبير مناقصات. "+ARABIC_RULE},{"role":"user","content":"انشئ اسئلة:\n"+ctx+"\n\n"+text[:6000]}])
-    msg=r.choices[0].message
-    return json.loads(msg.tool_calls[0].function.arguments) if msg.tool_calls else {}
+DOC_TOOLS=[{"type":"function","function":{"name":"document_agent","description":"استخرج بيانات المناقصة كاملة","parameters":{"type":"object","properties":{"title":{"type":"string"},"description":{"type":"string"},"requirements":{"type":"array","items":{"type":"object","properties":{"req_id":{"type":"string"},"title":{"type":"string"},"description":{"type":"string"},"is_mandatory":{"type":"boolean"},"category":{"type":"string","enum":["technical","financial","legal","administrative","other"]}},"required":["req_id","title","description","is_mandatory","category"]}},"deadlines":{"type":"array","items":{"type":"object","properties":{"event":{"type":"string"},"date_text":{"type":"string"},"is_critical":{"type":"boolean"}},"required":["event","date_text","is_critical"]}},"documents_required":{"type":"array","items":{"type":"object","properties":{"name":{"type":"string"},"is_mandatory":{"type":"boolean"}},"required":["name","is_mandatory"]}},"estimated_value":{"type":"string"},"duration":{"type":"string"},"location":{"type":"string"},"scope_of_work":{"type":"string"}},"required":["title","description","requirements","deadlines","documents_required"]}}}]
 
-def compute_decision(analyzer,compliance,qa):
-    reqs=analyzer.get("extract_requirements",{}).get("requirements",[])
-    deadlines=analyzer.get("extract_deadlines",{}).get("deadlines",[])
-    docs=analyzer.get("extract_documents",{}).get("documents",[])
-    gaps=compliance.get("check_gaps",{}).get("gaps",[])
-    ambs=compliance.get("check_ambiguities",{}).get("ambiguities",[])
-    conflicts=compliance.get("check_conflicts",{}).get("conflicts",[])
-    completeness=compliance.get("check_gaps",{}).get("completeness_score",50)
-    critical_gaps=[g for g in gaps if g.get("severity")=="critical"]
-    high_conf=[c for c in conflicts if c.get("risk_level")=="high"]
-    urgent_qs=[q for q in qa.get("questions",[]) if q.get("priority")=="urgent"]
-    score=100; issues=[]
-    if critical_gaps: score-=len(critical_gaps)*15; issues.append(f"{len(critical_gaps)} نقص حرج")
-    if high_conf: score-=len(high_conf)*20; issues.append(f"{len(high_conf)} تعارض عالي الخطورة")
-    if len(ambs)>3: score-=10; issues.append(f"{len(ambs)} بند غامض")
-    if completeness<60: score-=15; issues.append(f"اكتمال {completeness:.0f}% فقط")
-    score=max(0,min(100,score))
-    if score>=75 and not critical_gaps and not high_conf: verdict,verdict_ar,color,exp="PROCEED","المضي قدما","green","المستند مكتمل."
-    elif score>=50: verdict,verdict_ar,color,exp="CLARIFY","طلب توضيحات","yellow","توجد نقاط تحتاج توضيحا."
-    else: verdict,verdict_ar,color,exp="RISK","مخاطر عالية","red","المستند يحتوي على تعارضات او نقص حرج."
-    return {"verdict":verdict,"verdict_ar":verdict_ar,"verdict_color":color,"score":round(score),"explanation":exp,"issues":issues,"stats":{"requirements":len(reqs),"mandatory_reqs":len([r for r in reqs if r.get("is_mandatory")]),"deadlines":len(deadlines),"critical_deadlines":len([d for d in deadlines if d.get("is_critical")]),"documents":len(docs),"mandatory_docs":len([d for d in docs if d.get("is_mandatory")]),"gaps":len(gaps),"critical_gaps":len(critical_gaps),"ambiguities":len(ambs),"conflicts":len(conflicts),"urgent_questions":len(urgent_qs),"completeness":round(completeness)}}
+LEGAL_TOOLS=[{"type":"function","function":{"name":"legal_agent","description":"تحليل الشروط القانونية وبنود العقد","parameters":{"type":"object","properties":{"contract_terms":{"type":"array","items":{"type":"object","properties":{"term":{"type":"string"},"risk_level":{"type":"string","enum":["high","medium","low"]},"notes":{"type":"string"}},"required":["term","risk_level","notes"]}},"penalties":{"type":"array","items":{"type":"string"}},"termination_clauses":{"type":"string"},"legal_risks":{"type":"array","items":{"type":"string"}},"legal_score":{"type":"integer","description":"0=خطر قانوني عالي, 100=آمن تماماً"},"ambiguous_clauses":{"type":"array","items":{"type":"string"}},"summary":{"type":"string"}},"required":["contract_terms","legal_risks","legal_score","summary"]}}}]
 
+FIN_TOOLS=[{"type":"function","function":{"name":"financial_agent","description":"تحليل الجانب المالي والربحية","parameters":{"type":"object","properties":{"estimated_budget":{"type":"string"},"payment_terms":{"type":"string"},"financial_guarantees":{"type":"array","items":{"type":"string"}},"cost_risks":{"type":"array","items":{"type":"object","properties":{"item":{"type":"string"},"impact":{"type":"string","enum":["high","medium","low"]}},"required":["item","impact"]}},"profitability_assessment":{"type":"string","enum":["مربح جداً","مربح","متعادل","غير مربح","مجهول"]},"profit_margin_estimate":{"type":"string","description":"نسبة هامش الربح المتوقعة"},"financial_score":{"type":"integer","description":"0=خسارة محققة, 100=ربح ممتاز"},"recommendations":{"type":"array","items":{"type":"string"}},"summary":{"type":"string"}},"required":["profitability_assessment","financial_score","summary"]}}}]
+
+TECH_TOOLS=[{"type":"function","function":{"name":"technical_agent","description":"تحليل المتطلبات الفنية والتحديات التقنية","parameters":{"type":"object","properties":{"technical_requirements":{"type":"array","items":{"type":"object","properties":{"req":{"type":"string"},"complexity":{"type":"string","enum":["عالية","متوسطة","منخفضة"]},"feasible":{"type":"boolean"}},"required":["req","complexity","feasible"]}},"technologies_needed":{"type":"array","items":{"type":"string"}},"challenges":{"type":"array","items":{"type":"string"}},"technical_score":{"type":"integer","description":"0=تحديات كبيرة, 100=قابلية تنفيذ عالية"},"resource_requirements":{"type":"string"},"summary":{"type":"string"}},"required":["technical_requirements","technical_score","summary"]}}}]
+
+RISK_TOOLS=[{"type":"function","function":{"name":"risk_agent","description":"تحليل المخاطر الشاملة مع الإفصاحات كقواعد مخاطر","parameters":{"type":"object","properties":{"risks":{"type":"array","items":{"type":"object","properties":{"risk_id":{"type":"string"},"title":{"type":"string"},"description":{"type":"string"},"severity":{"type":"string","enum":["حرج","عالي","متوسط","منخفض"]},"source":{"type":"string","enum":["document","disclosure","client","market"]},"mitigation":{"type":"string"}},"required":["risk_id","title","description","severity","source","mitigation"]}},"alerts":{"type":"array","items":{"type":"object","properties":{"alert_id":{"type":"string"},"message":{"type":"string"},"level":{"type":"string","enum":["خطر","تحذير","معلومة"]},"source":{"type":"string"}},"required":["alert_id","message","level","source"]}},"risk_score":{"type":"integer","description":"0=خطر شديد, 100=آمن تماماً"},"overall_risk_level":{"type":"string","enum":["حرج","عالي","متوسط","منخفض"]},"disclosure_violations":{"type":"array","items":{"type":"string"},"description":"الإفصاحات التي تنتهكها المناقصة"},"summary":{"type":"string"}},"required":["risks","alerts","risk_score","overall_risk_level","summary"]}}}]
+
+CLIENT_TOOLS=[{"type":"function","function":{"name":"client_agent","description":"تقييم توافق المناقصة مع بيانات العميل واستراتيجيته","parameters":{"type":"object","properties":{"fit_score":{"type":"integer","description":"0=غير مناسب إطلاقاً, 100=مناسب تماماً"},"recommendation":{"type":"string","enum":["مناسب جداً","مناسب","محايد","غير مناسب"]},"alignment_with_strategy":{"type":"string","description":"مدى توافق المناقصة مع استراتيجية العميل"},"client_strengths":{"type":"array","items":{"type":"string"}},"client_weaknesses":{"type":"array","items":{"type":"string"}},"reason":{"type":"string"},"customized_advice":{"type":"string"},"risk_tolerance_match":{"type":"boolean","description":"هل تتوافق المناقصة مع مستوى المخاطرة للعميل"}},"required":["fit_score","recommendation","reason","customized_advice","risk_tolerance_match"]}}}]
+
+STRATEGY_TOOLS=[{"type":"function","function":{"name":"strategy_agent","description":"اقتراح استراتيجية دخول المناقصة وسعر العطاء","parameters":{"type":"object","properties":{"bid_decision":{"type":"string","enum":["ادخل بقوة","ادخل بحذر","ادخل مشروط","لا تدخل"]},"bid_decision_reason":{"type":"string"},"suggested_price":{"type":"string","description":"السعر المقترح أو النطاق السعري"},"price_rationale":{"type":"string","description":"مبرر السعر المقترح"},"approach":{"type":"string","enum":["Aggressive","Balanced","Safe","No Bid"]},"approach_description":{"type":"string","description":"وصف طريقة الدخول المقترحة"},"win_probability":{"type":"string","description":"نسبة الفوز المتوقعة مثل 65%"},"competitive_advantages":{"type":"array","items":{"type":"string"}},"key_conditions":{"type":"array","items":{"type":"string"},"description":"الشروط التي يجب تحقيقها قبل الدخول"},"negotiation_points":{"type":"array","items":{"type":"string"},"description":"نقاط يجب التفاوض عليها"},"timeline_recommendation":{"type":"string"}},"required":["bid_decision","bid_decision_reason","suggested_price","approach","approach_description","win_probability","competitive_advantages","key_conditions"]}}}]
+
+ASSIGN_TOOLS=[{"type":"function","function":{"name":"assignment_agent","description":"توزيع مهام التحليل والتنفيذ على الأقسام","parameters":{"type":"object","properties":{"assignments":{"type":"array","items":{"type":"object","properties":{"department":{"type":"string"},"task":{"type":"string"},"priority":{"type":"string","enum":["عاجل","مهم","عادي"]},"deadline":{"type":"string"},"deliverable":{"type":"string"}},"required":["department","task","priority"]}},"primary_department":{"type":"string"},"coordination_notes":{"type":"string"},"escalation_needed":{"type":"boolean"}},"required":["assignments","primary_department"]}}}]
+
+HISTORY_TOOLS=[{"type":"function","function":{"name":"history_agent","description":"أرشفة المناقصة بشكل ذكي للرجوع إليها مستقبلاً","parameters":{"type":"object","properties":{"archive_summary":{"type":"string"},"key_points":{"type":"array","items":{"type":"string"}},"lessons_learned":{"type":"array","items":{"type":"string"}},"tags":{"type":"array","items":{"type":"string"}},"similar_tenders_advice":{"type":"string"},"future_reference":{"type":"string","description":"ملاحظات للمناقصات المستقبلية المشابهة"}},"required":["archive_summary","key_points","tags"]}}}]
+
+SUMMARY_TOOLS=[{"type":"function","function":{"name":"summary_agent","description":"القرار النهائي الاستراتيجي الشامل","parameters":{"type":"object","properties":{"decision":{"type":"string","enum":["PROCEED","CLARIFY","RISK","REJECT"]},"decision_ar":{"type":"string"},"overall_score":{"type":"integer","description":"الدرجة الكلية 0-100"},"verdict_color":{"type":"string","enum":["green","yellow","red"]},"executive_summary":{"type":"string","description":"ملخص تنفيذي شامل في 3-4 جمل"},"key_reasons":{"type":"array","items":{"type":"string"}},"action_items":{"type":"array","items":{"type":"object","properties":{"action":{"type":"string"},"responsible":{"type":"string"},"priority":{"type":"string","enum":["فوري","قريب","عادي"]},"deadline":{"type":"string"}},"required":["action","responsible","priority"]}},"questions_for_client":{"type":"array","items":{"type":"object","properties":{"number":{"type":"integer"},"question":{"type":"string"},"priority":{"type":"string","enum":["عاجل","مهم","عادي"]}},"required":["number","question","priority"]}},"strategic_advice":{"type":"string","description":"النصيحة الاستراتيجية النهائية للإدارة"}},"required":["decision","decision_ar","overall_score","verdict_color","executive_summary","key_reasons","action_items","questions_for_client","strategic_advice"]}}}]
+
+
+# ─── Agent Runner ─────────────────────────────────────────────
+def _call_tool(tools, messages, tool_name):
+    r = openai_client.chat.completions.create(
+        model="gpt-4o", max_tokens=4000,
+        tools=tools,
+        tool_choice={"type":"function","function":{"name":tool_name}},
+        messages=messages
+    )
+    msg = r.choices[0].message
+    if msg.tool_calls:
+        try: return json.loads(msg.tool_calls[0].function.arguments)
+        except: return {}
+    return {}
+
+
+def _sys(role): return {"role":"system","content":role+" "+ARABIC_RULE}
+def _user(content): return {"role":"user","content":content[:14000]}
+def _ctx(d): return json.dumps(d, ensure_ascii=False)[:3000]
+
+
+def run_document_agent(text):
+    return _call_tool(DOC_TOOLS,[
+        _sys("أنت محلل وثائق مناقصات خبير بخبرة 20 عاماً في القطاعين الحكومي والخاص. استخرج كل المعلومات بدقة عالية. ركز على الأرقام والتواريخ والشروط الجوهرية. لا تُهمل أي تفصيل."),
+        _user("استخرج كل بيانات هذه المناقصة:\n\n"+text)
+    ],"document_agent")
+
+def run_legal_agent(text, doc):
+    return _call_tool(LEGAL_TOOLS,[
+        _sys("أنت محامٍ متخصص في عقود المناقصات السعودية والخليجية بخبرة 15 عاماً. حلل كل بند قانوني بعين ناقدة. ابحث عن الفخاخ القانونية والشروط الجزائية والبنود الغامضة التي قد تضر بالمتعاقد. كن صريحاً في التقييم."),
+        _user("حلل الشروط القانونية. ركز على البنود الجزائية والغامضة.\n\nبيانات المناقصة:\n"+_ctx(doc)+"\n\nالنص الكامل:\n"+text[:8000])
+    ],"legal_agent")
+
+def run_financial_agent(text, doc):
+    return _call_tool(FIN_TOOLS,[
+        _sys("أنت محلل مالي متمرس متخصص في تسعير وتقييم المناقصات. احسب هامش الربح الحقيقي مع احتساب المخاطر والتكاليف الخفية. قيّم ضمانات الدفع ومخاطر التأخر. أعطِ تقديراً دقيقاً للربحية الصافية."),
+        _user("حلل الجانب المالي وقدّر الربحية.\n\n"+_ctx(doc)+"\n\n"+text[:8000])
+    ],"financial_agent")
+
+def run_technical_agent(text, doc):
+    return _call_tool(TECH_TOOLS,[
+        _sys("أنت مهندس أول متخصص في تقييم المشاريع والمناقصات التقنية. قيّم كل متطلب تقني بموضوعية. حدد التحديات الحقيقية ومتطلبات الموارد. كن واقعياً في تقييم الجدوى التنفيذية."),
+        _user("حلل المتطلبات التقنية وقيّم صعوبة التنفيذ.\n\n"+_ctx(doc)+"\n\n"+text[:8000])
+    ],"technical_agent")
+
+def run_risk_agent(text, doc, legal, fin, tech, disclosures_text):
+    all_ctx = _ctx({"doc":doc,"legal":legal,"fin":fin,"tech":tech})
+    disc_ctx = f"\n\n=== قواعد المخاطر من الإفصاحات (يجب مقارنة المناقصة بها) ===\n{disclosures_text}" if disclosures_text else ""
+    return _call_tool(RISK_TOOLS,[
+        _sys("انت محلل مخاطر محترف. قارن المناقصة مع قواعد المخاطر المستخرجة من الإفصاحات. أصدر تنبيهات دقيقة."),
+        _user("حلل المخاطر الشاملة وقارن مع الإفصاحات:\n"+all_ctx+disc_ctx+"\n\n"+text[:6000])
+    ],"risk_agent")
+
+def run_client_agent(text, doc, risk, client_data):
+    client_ctx = _ctx(client_data) if client_data else "لا توجد بيانات عميل محددة"
+    return _call_tool(CLIENT_TOOLS,[
+        _sys("انت مستشار أعمال متخصص في تخصيص قرارات المناقصات حسب بيانات العميل واستراتيجيته."),
+        _user(f"قيّم توافق هذه المناقصة مع بيانات العميل الآتية:\n\nبيانات العميل:\n{client_ctx}\n\nالمناقصة:\n{_ctx(doc)}\n\nالمخاطر:\n{_ctx(risk)}")
+    ],"client_agent")
+
+def run_strategy_agent(doc, legal, fin, tech, risk, client, client_data):
+    client_ctx = _ctx(client_data) if client_data else "بدون عميل محدد"
+    all_analysis = _ctx({"doc":doc,"legal":legal,"fin":fin,"tech":tech,"risk":risk,"client":client})
+    return _call_tool(STRATEGY_TOOLS,[
+        _sys("أنت مستشار استراتيجي رفيع المستوى متخصص في استراتيجيات تسعير والفوز بالمناقصات. اقترح استراتيجية دخول مدروسة مع سعر تنافسي حقيقي. اربط قرارك بتحليل المنافسين المحتملين وظروف السوق. نسبة الفوز يجب أن تكون واقعية ومبنية على التحليل."),
+        _user(f"بناءً على التحليل الكامل، اقترح استراتيجية دخول المناقصة:\n\nبيانات العميل:\n{client_ctx}\n\nالتحليل الكامل:\n{all_analysis}")
+    ],"strategy_agent")
+
+def run_assignment_agent(doc, strategy, depts_list):
+    depts_ctx = ", ".join(depts_list) if depts_list else "الأقسام العامة"
+    return _call_tool(ASSIGN_TOOLS,[
+        _sys("انت مدير تشغيل محترف. وزّع المهام بشكل عملي وواضح."),
+        _user(f"وزّع مهام التحليل والتنفيذ على الأقسام المتاحة:\n\nالأقسام: {depts_ctx}\n\nالمناقصة:\n{_ctx(doc)}\n\nالاستراتيجية:\n{_ctx(strategy)}")
+    ],"assignment_agent")
+
+def run_history_agent(all_results):
+    return _call_tool(HISTORY_TOOLS,[
+        _sys("انت مدير أرشيف ذكي. وثّق المناقصة بشكل يفيد المستقبل."),
+        _user("أرشف هذه المناقصة بشكل شامل:\n"+_ctx(all_results))
+    ],"history_agent")
+
+def run_summary_agent(all_results, client_data):
+    client_ctx = _ctx(client_data) if client_data else "بدون عميل"
+    return _call_tool(SUMMARY_TOOLS,[
+        _sys("أنت كبير المستشارين الاستراتيجيين. بناءً على تحليل 9 agents متخصصين، أصدر قراراً نهائياً حاسماً وموثوقاً. الملخص التنفيذي يجب أن يكون مقنعاً للإدارة العليا. اجمع كل التحليلات في رأي واحد واضح لا لبس فيه."),
+        _user(f"بناءً على تحليل 9 Agents، أصدر القرار النهائي الاستراتيجي:\n\nبيانات العميل:\n{client_ctx}\n\nجميع التحليلات:\n{_ctx(all_results)}")
+    ],"summary_agent")
+
+
+# ─── Tenders Endpoints ────────────────────────────────────────
+@app.get("/tenders/")
+async def list_tenders(
+    user=Depends(get_current_user),
+    search:str=Query(None), status:str=Query(None),
+    verdict:str=Query(None), client_id:str=Query(None),
+    user_id:str=Query(None)
+):
+    q=supabase.table("tenders").select("id,title,filename,status,verdict,verdict_ar,overall_score,risk_score,fit_score,created_at,completed_at,user_id,profiles(full_name,company),clients(company_name),departments(name)")
+    # Admin sees ALL tenders always
+    if user["role"] == "user":
+        q=q.eq("user_id",user["id"])
+    elif user_id:
+        q=q.eq("user_id",user_id)
+    if search: q=q.ilike("title",f"%{search}%")
+    if status: q=q.eq("status",status)
+    if verdict: q=q.eq("verdict",verdict)
+    if client_id: q=q.eq("client_id",client_id)
+    return q.order("created_at",desc=True).execute().data
+
+@app.get("/tenders/stats")
+async def tender_stats(user=Depends(get_current_user)):
+    q=supabase.table("tenders").select("id,status,verdict,overall_score,risk_score,fit_score")
+    if user["role"] not in ("admin","manager"): q=q.eq("user_id",user["id"])
+    data=q.execute().data or []
+    scores=[t["overall_score"] for t in data if t.get("overall_score")]
+    return {
+        "total":len(data),
+        "by_status":{"جديدة":sum(1 for t in data if t["status"]=="جديدة"),"قيد التحليل":sum(1 for t in data if t["status"]=="قيد التحليل"),"مكتملة":sum(1 for t in data if t["status"]=="مكتملة"),"مرفوضة":sum(1 for t in data if t["status"]=="مرفوضة")},
+        "by_verdict":{"PROCEED":sum(1 for t in data if t.get("verdict")=="PROCEED"),"CLARIFY":sum(1 for t in data if t.get("verdict")=="CLARIFY"),"RISK":sum(1 for t in data if t.get("verdict")=="RISK"),"REJECT":sum(1 for t in data if t.get("verdict")=="REJECT")},
+        "avg_score":round(sum(scores)/len(scores)) if scores else 0,
+        "avg_risk":round(sum(t["risk_score"] for t in data if t.get("risk_score"))/len(data)) if data else 0,
+        "avg_fit":round(sum(t["fit_score"] for t in data if t.get("fit_score"))/len(data)) if data else 0,
+    }
+
+@app.get("/tenders/{tid}")
+async def get_tender(tid:str, user=Depends(get_current_user)):
+    res=supabase.table("tenders").select("*,profiles(full_name,company),clients(company_name,industry,client_type,contact_name),departments(name)").eq("id",tid).single().execute()
+    if not res.data: raise HTTPException(status_code=404,detail="المناقصة غير موجودة")
+    t=res.data
+    if user["role"] not in ("admin","manager") and t.get("user_id")!=user["id"]:
+        raise HTTPException(status_code=403,detail="غير مصرح")
+    return t
+
+@app.delete("/tenders/{tid}")
+async def delete_tender(tid:str, admin=Depends(require_admin)):
+    supabase.table("tenders").delete().eq("id",tid).execute()
+    return {"message":"تم حذف المناقصة"}
+
+
+# ── Tender Assignments (Employee) ─────────────────────
+class TenderAssignRequest(BaseModel):
+    tender_id: str
+    employee_ids: List[str]
+    notes: Optional[str] = None
+
+@app.get("/tenders/{tid}/suggest-employees")
+async def suggest_employees_for_tender(tid:str, user=Depends(require_manager)):
+    """الذكاء الاصطناعي يقترح الموظفين المناسبين للمناقصة"""
+    # جلب بيانات المناقصة
+    tender_res = supabase.table("tenders").select("title,description,assignments,technical_analysis,final_decision").eq("id",tid).single().execute()
+    if not tender_res.data:
+        raise HTTPException(status_code=404, detail="المناقصة غير موجودة")
+    tender = tender_res.data
+
+    # جلب جميع الموظفين النشطين مع أقسامهم
+    emps_res = supabase.table("employees").select("id,full_name,position,grade,department_id,nationality,employment_type,departments(name,code)").eq("status","active").execute()
+    employees = emps_res.data or []
+    if not employees:
+        return {"suggestions": [], "message": "لا يوجد موظفون نشطون"}
+
+    # جلب التكليفات الحالية لكل موظف (عبء العمل)
+    workload = {}
+    for emp in employees:
+        cnt = supabase.table("tender_assignments").select("id", count="exact").eq("employee_id", emp["id"]).execute()
+        workload[emp["id"]] = cnt.count or 0
+
+    # بناء قائمة الموظفين للـ AI
+    emp_lines = []
+    for e in employees:
+        dept_name = (e.get("departments") or {}).get("name", "—")
+        line = f"- ID:{e['id']} | الاسم:{e['full_name']} | المسمى:{e['position']} | القسم:{dept_name} | عبء العمل:{workload.get(e['id'],0)} مناقصة"
+        emp_lines.append(line)
+    emp_list = "\n".join(emp_lines)
+
+    tender_title = tender.get("title", "")
+    tender_desc = tender.get("description", "")
+    tender_assign = json.dumps(tender.get("assignments", {}), ensure_ascii=False)[:800]
+    tender_tech = json.dumps(tender.get("technical_analysis", {}), ensure_ascii=False)[:400]
+    tender_ctx = f"عنوان المناقصة: {tender_title}\nالوصف: {tender_desc}\nتوزيع الأقسام: {tender_assign}\nالمتطلبات التقنية: {tender_tech}"
+
+    prompt = "أنت مدير موارد بشرية ذكي. بناءً على بيانات المناقصة وقائمة الموظفين، اقترح أفضل 3-5 موظفين للعمل على هذه المناقصة.\n\n"
+    prompt += f"المناقصة:\n{tender_ctx}\n\nالموظفون المتاحون:\n{emp_list}\n\n"
+    prompt += """قواعد الاختيار:
+- اختر الموظفين الأنسب حسب المسمى الوظيفي والقسم
+- افضّل من لديهم عبء عمل أقل
+- أعطِ سبباً واضحاً لكل اختيار
+- أجب بالعربية فقط
+
+أجب بصيغة JSON فقط:
+{
+  "suggestions": [
+    {
+      "employee_id": "ID هنا",
+      "employee_name": "الاسم",
+      "role_in_tender": "دوره في المناقصة",
+      "reason": "سبب الاختيار",
+      "priority": "رئيسي أو داعم",
+      "match_score": 85
+    }
+  ],
+  "assignment_notes": "ملاحظات عامة للإدارة"
+}"""
+
+
+    loop = asyncio.get_event_loop()
+    def _call_ai():
+        r = openai_client.chat.completions.create(
+            model="gpt-4o", max_tokens=2000,
+            messages=[{"role":"user","content":prompt}],
+            response_format={"type":"json_object"}
+        )
+        return json.loads(r.choices[0].message.content)
+
+    result = await asyncio.wait_for(loop.run_in_executor(executor, _call_ai), timeout=30)
+
+    # أضف بيانات الموظف الكاملة لكل اقتراح
+    emp_map = {e["id"]: e for e in employees}
+    for s in result.get("suggestions", []):
+        emp = emp_map.get(s.get("employee_id"), {})
+        s["department"] = emp.get("departments", {}).get("name", "—") if emp else "—"
+        s["position"] = emp.get("position", "—")
+        s["current_workload"] = workload.get(s.get("employee_id"), 0)
+
+    return result
+
+
+@app.post("/tenders/{tid}/assign-employees")
+async def assign_employees_to_tender(tid:str, req:TenderAssignRequest, user=Depends(require_manager)):
+    # حذف التكليفات القديمة
+    supabase.table("tender_assignments").delete().eq("tender_id",tid).execute()
+    # إضافة التكليفات الجديدة
+    records = [{"tender_id":tid,"employee_id":eid,"assigned_by":user["id"],"notes":req.notes} for eid in req.employee_ids]
+    if records:
+        supabase.table("tender_assignments").insert(records).execute()
+    log_activity(user["id"],"تكليف موظفين","tenders",tid,{"count":len(req.employee_ids)})
+    return {"message":f"تم تكليف {len(req.employee_ids)} موظف"}
+
+@app.get("/tenders/{tid}/assignments")
+async def get_tender_assignments(tid:str, user=Depends(get_current_user)):
+    res = supabase.table("tender_assignments").select("*,employees(full_name,position,departments(name))").eq("tender_id",tid).execute()
+    return res.data
+
+@app.get("/employees/{eid}/tenders")
+async def get_employee_tenders(eid:str, user=Depends(require_manager)):
+    res = supabase.table("tender_assignments").select("*,tenders(id,title,status,verdict,overall_score,created_at,clients(company_name))").eq("employee_id",eid).execute()
+    return [r["tenders"] for r in (res.data or []) if r.get("tenders")]
+
+@app.get("/departments/{did}/workload")
+async def get_department_workload(did:str, user=Depends(require_manager)):
+    # جلب موظفي القسم
+    emps = supabase.table("employees").select("id,full_name,position").eq("department_id",did).eq("status","active").execute().data or []
+    workload = []
+    for emp in emps:
+        tenders = supabase.table("tender_assignments").select("tender_id,tenders(id,title,status,verdict,overall_score)").eq("employee_id",emp["id"]).execute().data or []
+        workload.append({**emp,"assigned_tenders":len(tenders),"tenders":[t["tenders"] for t in tenders if t.get("tenders")]})
+    return workload
+
+@app.get("/stats/workload")
+async def workload_stats(admin=Depends(require_admin)):
+    depts = supabase.table("departments").select("id,name").eq("is_active",True).execute().data or []
+    result = []
+    for dept in depts:
+        emps = supabase.table("employees").select("id").eq("department_id",dept["id"]).eq("status","active").execute().data or []
+        emp_ids = [e["id"] for e in emps]
+        assigned = 0
+        if emp_ids:
+            for eid in emp_ids:
+                cnt = supabase.table("tender_assignments").select("id",count="exact").eq("employee_id",eid).execute()
+                assigned += cnt.count or 0
+        result.append({"department":dept["name"],"employees":len(emps),"assigned_tenders":assigned})
+    return result
+
+
+# ─── Gatekeeper Agent ─────────────────────────────────────
+GATE_TOOLS=[{"type":"function","function":{"name":"gatekeeper_agent","description":"فحص ما إذا كان الملف وثيقة مناقصة حقيقية","parameters":{"type":"object","properties":{"is_tender":{"type":"boolean"},"confidence":{"type":"integer"},"document_type":{"type":"string"},"rejection_reason":{"type":"string"},"tender_indicators":{"type":"array","items":{"type":"string"}}},"required":["is_tender","confidence","document_type","rejection_reason","tender_indicators"]}}}]
+
+def run_gatekeeper(text):
+    return _call_tool(GATE_TOOLS,[
+        {"role":"system","content":"""أنت حارس بوابة متخصص في تحديد وثائق المناقصات.
+مهمتك: هل هذا الملف وثيقة مناقصة أو عطاء أو طرح أو مشتريات؟
+
+علامات المناقصة الحقيقية:
+- شروط وأحكام للتقديم
+- متطلبات فنية أو مالية لتقديم عروض
+- مواعيد تقديم العروض
+- معايير تقييم العروض
+- جهة طارحة تطلب عروضاً
+
+ليست مناقصات (ارفض فوراً):
+- قوائم طعام / منيو
+- سير ذاتية / CVs
+- تقارير مالية عادية
+- مقالات وأبحاث
+- عقود توظيف / فواتير
+- أي وثيقة لا تطلب عروض أسعار
+
+كن صارماً جداً — أي شك = رفض. """+ARABIC_RULE},
+        {"role":"user","content":"افحص هذه الوثيقة:\n\n"+text[:5000]}
+    ], "gatekeeper_agent")
+
+
+# ─── Main Analyze Endpoint (Gatekeeper + 10 Agents) ──────
 @app.post("/analyze/")
-async def analyze(file: UploadFile = File(...), user=Depends(get_current_user)):
-    if not file.filename.lower().endswith(".pdf"): raise HTTPException(status_code=400, detail="ملفات PDF فقط")
-    contents=await file.read(); text=""; page_count=0
+async def analyze(
+    file: UploadFile = File(...),
+    client_id: str = None,
+    user=Depends(require_admin)
+):
+    if not file.filename.lower().endswith(".pdf"):
+        raise HTTPException(status_code=400, detail="ملفات PDF فقط — يرجى رفع ملف بصيغة PDF")
+
+    contents = await file.read()
+    text = ""; page_count = 0
     with pdfplumber.open(io.BytesIO(contents)) as pdf:
-        page_count=len(pdf.pages)
-        for page in pdf.pages: text+=page.extract_text() or ""
-    if not text.strip(): raise HTTPException(status_code=400, detail="تعذر استخراج النص")
-    loop=asyncio.get_event_loop()
-    analyzer_results=await asyncio.wait_for(loop.run_in_executor(executor,run_analyzer,text),timeout=90)
-    cf=loop.run_in_executor(executor,run_compliance,text,analyzer_results)
-    qf=loop.run_in_executor(executor,run_qa,text,analyzer_results,{})
-    compliance_results,qa_results=await asyncio.wait_for(asyncio.gather(cf,qf),timeout=90)
-    decision=compute_decision(analyzer_results,compliance_results,qa_results)
-    file_url=None
+        page_count = len(pdf.pages)
+        for page in pdf.pages: text += page.extract_text() or ""
+    if not text.strip():
+        raise HTTPException(status_code=400, detail="تعذّر استخراج النص — تأكد أن الملف يحتوي على نص قابل للقراءة")
+
+    # ═══ Gatekeeper Check ═══
+    loop = asyncio.get_event_loop()
+    gate = await asyncio.wait_for(
+        loop.run_in_executor(executor, run_gatekeeper, text), timeout=30
+    )
+
+    if not gate.get("is_tender", False) or gate.get("confidence", 0) < 60:
+        doc_type = gate.get("document_type", "وثيقة غير معروفة")
+        reason   = gate.get("rejection_reason", "الملف لا يحتوي على مؤشرات مناقصة")
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "error": "not_a_tender",
+                "title": "هذا الملف ليس وثيقة مناقصة",
+                "document_type": doc_type,
+                "reason": reason,
+                "confidence": gate.get("confidence", 0),
+                "message": f"تم اكتشاف الملف كـ '{doc_type}'. {reason}. يرجى رفع وثيقة مناقصة أو عطاء أو طرح رسمي."
+            }
+        )
+
+    # حفظ أولي بحالة "قيد التحليل"
+    tid = str(uuid.uuid4())
+    supabase.table("tenders").insert({
+        "id":tid, "user_id":user["id"],
+        "client_id":client_id if client_id else None,
+        "filename":file.filename, "pages":page_count,
+        "status":"قيد التحليل", "title":file.filename
+    }).execute()
+
+    # جلب بيانات مساعدة
+    client_data = None
+    if client_id:
+        cr = supabase.table("clients").select("*").eq("id", client_id).single().execute()
+        if cr.data: client_data = cr.data
+
+    disclosures_text = ""
+
+    # جلب الأقسام
+    depts_res = supabase.table("departments").select("name").eq("is_active",True).execute()
+    depts_list = [d["name"] for d in (depts_res.data or [])]
+
+
+    # ═══ Agent 1: Document ═══
+    doc_result = await asyncio.wait_for(
+        loop.run_in_executor(executor, run_document_agent, text), timeout=60
+    )
+
+    # ═══ Agents 2, 3, 4 بالتوازي ═══
+    legal_f = loop.run_in_executor(executor, run_legal_agent, text, doc_result)
+    fin_f   = loop.run_in_executor(executor, run_financial_agent, text, doc_result)
+    tech_f  = loop.run_in_executor(executor, run_technical_agent, text, doc_result)
+    legal_result, fin_result, tech_result = await asyncio.wait_for(
+        asyncio.gather(legal_f, fin_f, tech_f), timeout=120
+    )
+
+    # ═══ Agent 5: Risk (يستخدم الإفصاحات) ═══
+    risk_result = await asyncio.wait_for(
+        loop.run_in_executor(executor, run_risk_agent, text, doc_result, legal_result, fin_result, tech_result, disclosures_text),
+        timeout=60
+    )
+
+    # ═══ Agent 6: Client ═══
+    client_result = await asyncio.wait_for(
+        loop.run_in_executor(executor, run_client_agent, text, doc_result, risk_result, client_data),
+        timeout=60
+    )
+
+    # ═══ Agent 7: Strategy ═══ (الإضافة القوية)
+    strategy_result = await asyncio.wait_for(
+        loop.run_in_executor(executor, run_strategy_agent, doc_result, legal_result, fin_result, tech_result, risk_result, client_result, client_data),
+        timeout=60
+    )
+
+    # ═══ Agent 8: Assignment ═══
+    assign_result = await asyncio.wait_for(
+        loop.run_in_executor(executor, run_assignment_agent, doc_result, strategy_result, depts_list),
+        timeout=60
+    )
+
+    # ═══ Agent 9: History ═══
+    all_for_history = {
+        "document":doc_result, "legal":legal_result, "financial":fin_result,
+        "technical":tech_result, "risk":risk_result, "client":client_result,
+        "strategy":strategy_result, "assignments":assign_result
+    }
+    history_result = await asyncio.wait_for(
+        loop.run_in_executor(executor, run_history_agent, all_for_history), timeout=60
+    )
+
+    # ═══ Agent 10: Summary ═══
+    all_for_summary = {**all_for_history, "history":history_result}
+    summary_result = await asyncio.wait_for(
+        loop.run_in_executor(executor, run_summary_agent, all_for_summary, client_data), timeout=60
+    )
+
+    # حساب الدرجات
+    risk_score    = risk_result.get("risk_score", 50)
+    fit_score     = client_result.get("fit_score", 50)
+    overall_score = summary_result.get("overall_score", 50)
+    verdict       = summary_result.get("decision", "CLARIFY")
+    verdict_ar    = summary_result.get("decision_ar", "طلب توضيحات")
+    alerts        = risk_result.get("alerts", [])
+
+    # رفع الملف
+    file_url = None
     try:
-        fp=f"{user['id']}/{uuid.uuid4()}/{file.filename}"
-        supabase.storage.from_("pdfs").upload(fp,contents,{"content-type":"application/pdf"})
-        file_url=f"{SUPABASE_URL}/storage/v1/object/pdfs/{fp}"
+        fp = f"{user['id']}/{uuid.uuid4()}/{file.filename}"
+        supabase.storage.from_("pdfs").upload(fp, contents, {"content-type":"application/pdf"})
+        file_url = f"{SUPABASE_URL}/storage/v1/object/pdfs/{fp}"
     except: pass
-    aid=str(uuid.uuid4())
-    supabase.table("analyses").insert({"id":aid,"user_id":user["id"],"filename":file.filename,"pages":page_count,"file_url":file_url,"analyzer_results":analyzer_results,"compliance_results":compliance_results,"qa_results":qa_results,"decision":decision,"verdict":decision["verdict"],"score":decision["score"]}).execute()
-    sid=str(uuid.uuid4())
-    document_store[sid]={"text":text,"analysis":{"analyzer":analyzer_results,"compliance":compliance_results,"qa":qa_results,"decision":decision}}
-    return {"session_id":sid,"analysis_id":aid,"filename":file.filename,"pages":page_count,"analyzer":analyzer_results,"compliance":compliance_results,"qa":qa_results,"decision":decision}
+
+    # تحديث قاعدة البيانات
+    title       = doc_result.get("title", file.filename)
+    description = doc_result.get("description", "")
+
+    dept_id = None
+    primary_dept = assign_result.get("primary_department","")
+    if primary_dept and depts_res.data:
+        for d in depts_res.data:
+            if d["name"] in primary_dept or primary_dept in d["name"]:
+                dr = supabase.table("departments").select("id").eq("name",d["name"]).single().execute()
+                if dr.data: dept_id = dr.data["id"]; break
+
+    supabase.table("tenders").update({
+        "title":title, "description":description, "file_url":file_url,
+        "status":"مكتملة", "department_id":dept_id,
+        "document_summary":doc_result, "legal_analysis":legal_result,
+        "financial_analysis":fin_result, "technical_analysis":tech_result,
+        "risk_analysis":risk_result, "client_evaluation":client_result,
+        "strategy_analysis":strategy_result,
+        "assignments":assign_result, "history_summary":history_result,
+        "final_decision":summary_result,
+        "risk_score":risk_score, "fit_score":fit_score, "overall_score":overall_score,
+        "verdict":verdict, "verdict_ar":verdict_ar, "alerts":alerts,
+        "completed_at":datetime.utcnow().isoformat(),
+        "updated_at":datetime.utcnow().isoformat()
+    }).eq("id",tid).execute()
+
+    log_activity(user["id"], "رفع مناقصة", "tenders", tid, {"title":title,"verdict":verdict,"score":overall_score})
+
+    sid = str(uuid.uuid4())
+    document_store[sid] = {
+        "text":text, "analysis":all_for_summary,
+        "tender_id":tid, "client_data":client_data
+    }
+
+    return {
+        "session_id":sid, "tender_id":tid, "filename":file.filename, "pages":page_count,
+        "title":title, "description":description,
+        "document_summary":doc_result, "legal_analysis":legal_result,
+        "financial_analysis":fin_result, "technical_analysis":tech_result,
+        "risk_analysis":risk_result, "client_evaluation":client_result,
+        "strategy_analysis":strategy_result,
+        "assignments":assign_result, "history_summary":history_result,
+        "final_decision":summary_result,
+        "risk_score":risk_score, "fit_score":fit_score, "overall_score":overall_score,
+        "verdict":verdict, "verdict_ar":verdict_ar, "alerts":alerts
+    }
+
 
 class ChatReq(BaseModel): session_id:str; question:str
 
 @app.post("/chat/")
 async def chat(req:ChatReq, user=Depends(get_current_user)):
-    stored=document_store.get(req.session_id)
-    if not stored: raise HTTPException(status_code=404, detail="انتهت الجلسة")
-    ctx=f"=== الوثيقة ===\n{stored['text'][:20000]}\n\n=== التحليل ===\n{json.dumps(stored['analysis'],ensure_ascii=False)[:4000]}"
-    messages=[{"role":"system","content":"انت مساعد مناقصات. اجب بالعربية دائما.\n\n"+ctx},{"role":"user","content":req.question}]
-    loop=asyncio.get_event_loop()
-    r=await loop.run_in_executor(executor,lambda:openai_client.chat.completions.create(model="gpt-4o-mini",max_tokens=1200,messages=messages))
+    stored = document_store.get(req.session_id)
+    if not stored: raise HTTPException(status_code=404, detail="انتهت الجلسة، أعد رفع الملف")
+    analysis_ctx = json.dumps(stored["analysis"], ensure_ascii=False)[:5000]
+    client_ctx = json.dumps(stored.get("client_data"), ensure_ascii=False) if stored.get("client_data") else "لا يوجد عميل"
+    sys_prompt = f"""أنت مستشار مناقصات استراتيجي متخصص. لديك المعلومات التالية:
+
+=== نص المناقصة ===
+{stored["text"][:15000]}
+
+=== التحليل الكامل (10 Agents) ===
+{analysis_ctx}
+
+=== بيانات العميل ===
+{client_ctx}
+
+قواعد: اجب بالعربية دائماً. اربط إجابتك ببيانات المناقصة والعميل. كن محدداً وعملياً."""
+
+    messages = [{"role":"system","content":sys_prompt}, {"role":"user","content":req.question}]
+    loop = asyncio.get_event_loop()
+    r = await loop.run_in_executor(executor, lambda: openai_client.chat.completions.create(
+        model="gpt-4o", max_tokens=2000, messages=messages
+    ))
     return {"answer":r.choices[0].message.content}
