@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>منجز — لوحة التحكم المؤسسية</title>
+<title>منجز — لوحة التحكم</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -171,6 +171,11 @@ body{background:var(--bg);color:var(--dark);font-family:var(--font);min-height:1
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--dark);color:#fff;padding:12px 22px;border-radius:12px;font-size:13px;font-weight:600;z-index:9999;opacity:0;pointer-events:none;transition:opacity .3s;white-space:nowrap;}
 .toast.show{opacity:1;}
 .toast.error{background:#dc2626;}
+.upload-zone{border:2.5px dashed var(--border);border-radius:20px;padding:56px 32px;text-align:center;cursor:pointer;transition:all .3s;background:var(--white);}
+.upload-zone:hover{border-color:var(--green);background:var(--green4);}
+.upload-zone.drag{border-color:var(--green);background:var(--green4);border-style:solid;}
+.progress-wrap{background:#f0f4f0;border-radius:100px;height:8px;overflow:hidden;margin:8px 0;}
+.progress-bar{height:100%;background:linear-gradient(90deg,var(--green),var(--green2));border-radius:100px;transition:width .5s;}
 
 /* ── Activity Log ── */
 .activity-item{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid #f0f4f0;}
@@ -199,6 +204,11 @@ body{background:var(--bg);color:var(--dark);font-family:var(--font);min-height:1
     <div class="nav-item active" onclick="showPage('overview')"><span class="ni">📊</span> نظرة عامة</div>
   </div>
   <div class="nav-group">
+    <div class="nav-label">المناقصات</div>
+    <div class="nav-item" onclick="showPage('analyze')"><span class="ni">📤</span> رفع مناقصة</div>
+    <div class="nav-item" onclick="showPage('tenders')"><span class="ni">📂</span> سجل المناقصات</div>
+  </div>
+  <div class="nav-group">
     <div class="nav-label">الموارد البشرية</div>
     <div class="nav-item" onclick="showPage('employees')"><span class="ni">👷</span> الموظفون</div>
     <div class="nav-item" onclick="showPage('departments')"><span class="ni">🏢</span> الأقسام</div>
@@ -209,12 +219,13 @@ body{background:var(--bg);color:var(--dark);font-family:var(--font);min-height:1
   </div>
   <div class="nav-group">
     <div class="nav-label">الإفصاحات</div>
-    <div class="nav-item" onclick="showPage('disclosures')"><span class="ni">📢</span> الإفصاحات</div>
+    
   </div>
   <div class="nav-group">
     <div class="nav-label">النظام</div>
     <div class="nav-item" onclick="showPage('users')"><span class="ni">👥</span> المستخدمون</div>
-    <div class="nav-item" onclick="showPage('analyses')"><span class="ni">📋</span> تحليلات المناقصات</div>
+    <div class="nav-item" onclick="showPage('tenders')"><span class="ni">📋</span> سجل المناقصات</div>
+    <div class="nav-item" onclick="showPage('workload')"><span class="ni">👷</span> توزيع العمل</div>
     <div class="nav-item" onclick="showPage('activity')"><span class="ni">📝</span> سجل النشاط</div>
   </div>
   <div class="sidebar-footer">
@@ -344,38 +355,6 @@ body{background:var(--bg);color:var(--dark);font-family:var(--font);min-height:1
   </div>
 </div>
 
-<!-- ═══ DISCLOSURES ═══ -->
-<div class="page" id="page-disclosures">
-  <div class="page-header">
-    <div class="page-title"><h1>📢 الإفصاحات</h1><p>إدارة الإعلانات والإفصاحات المؤسسية</p></div>
-    <button class="btn btn-primary" onclick="openDiscModal()">＋ إفصاح جديد</button>
-  </div>
-  <div class="card">
-    <div class="card-header">
-      <h3>📢 قائمة الإفصاحات</h3>
-      <div class="card-tools">
-        <select class="filter-select" onchange="filterDiscByCategory(this.value)">
-          <option value="">كل الفئات</option>
-          <option value="financial">مالي</option>
-          <option value="operational">تشغيلي</option>
-          <option value="legal">قانوني</option>
-          <option value="hr">موارد بشرية</option>
-          <option value="technical">تقني</option>
-          <option value="strategic">استراتيجي</option>
-          <option value="urgent">عاجل</option>
-          <option value="general">عام</option>
-        </select>
-      </div>
-    </div>
-    <div class="tbl-wrap">
-    <table class="table">
-      <thead><tr><th>العنوان</th><th>الفئة</th><th>الأهمية</th><th>الحالة</th><th>المشاهدات</th><th>المُنشئ</th><th>التاريخ</th><th>إجراءات</th></tr></thead>
-      <tbody id="discTbody"><tr><td colspan="8" class="empty-state"><span class="ei">⏳</span></td></tr></tbody>
-    </table>
-    </div>
-  </div>
-</div>
-
 <!-- ═══ USERS ═══ -->
 <div class="page" id="page-users">
   <div class="page-header">
@@ -396,19 +375,111 @@ body{background:var(--bg);color:var(--dark);font-family:var(--font);min-height:1
   </div>
 </div>
 
-<!-- ═══ ANALYSES ═══ -->
-<div class="page" id="page-analyses">
+<!-- ═══ TENDERS ═══ -->
+<div class="page" id="page-tenders">
   <div class="page-header">
-    <div class="page-title"><h1>📋 تحليلات المناقصات</h1><p>سجل جميع التحليلات</p></div>
+    <div class="page-title"><h1>📋 سجل المناقصات</h1><p>جميع مناقصات المستخدمين</p></div>
   </div>
+  <div class="stats-grid" id="tenderStatsGrid"></div>
   <div class="card">
-    <div class="card-header"><h3>📋 التحليلات</h3></div>
+    <div class="card-header">
+      <h3>📋 المناقصات</h3>
+      <div class="card-tools">
+        <input class="search-bar" placeholder="🔍 بحث..." oninput="filterAdminTenders(this.value)" style="width:200px">
+        <select class="filter-select" onchange="filterAdminTenderVerdict(this.value)">
+          <option value="">كل القرارات</option>
+          <option value="PROCEED">المضي</option>
+          <option value="CLARIFY">توضيحات</option>
+          <option value="RISK">مخاطر</option>
+          <option value="REJECT">رفض</option>
+        </select>
+        <select class="filter-select" onchange="filterAdminTenderStatus(this.value)">
+          <option value="">كل الحالات</option>
+          <option value="مكتملة">مكتملة</option>
+          <option value="قيد التحليل">قيد التحليل</option>
+        </select>
+      </div>
+    </div>
     <div class="tbl-wrap">
     <table class="table">
-      <thead><tr><th>الملف</th><th>المستخدم</th><th>القرار</th><th>الدرجة</th><th>التاريخ</th><th>إجراءات</th></tr></thead>
-      <tbody id="analysesTbody"></tbody>
+      <thead><tr><th>المناقصة</th><th>المستخدم</th><th>العميل</th><th>القرار</th><th>الدرجة</th><th>المخاطر</th><th>التوافق</th><th>الحالة</th><th>التاريخ</th><th>إجراءات</th></tr></thead>
+      <tbody id="adminTendersTbody"></tbody>
     </table>
     </div>
+  </div>
+</div>
+
+<!-- ═══ WORKLOAD ═══ -->
+<div class="page" id="page-workload">
+  <div class="page-header">
+    <div class="page-title"><h1>👷 توزيع العمل الذكي</h1><p>عبء العمل على الأقسام والموظفين</p></div>
+    <button class="btn btn-ghost btn-sm" onclick="loadWorkload()">↻ تحديث</button>
+  </div>
+  <div class="stats-grid" id="workloadStats"></div>
+  <div id="workloadDepts"></div>
+</div>
+
+
+
+<!-- ═══ ANALYZE ═══ -->
+<div class="page" id="page-analyze">
+  <div class="page-header">
+    <div class="page-title"><h1>📤 رفع مناقصة</h1><p>10 Agents يحللون المناقصة بالكامل</p></div>
+  </div>
+  <div id="uploadSection">
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-header"><h3>⚙️ إعدادات التحليل</h3></div>
+      <div style="padding:16px 20px;display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div class="field" style="margin:0"><label>ربط بعميل (اختياري)</label><select id="analyzeClientId" class="filter-select" style="width:100%"><option value="">بدون ربط بعميل</option></select></div>
+        <div class="field" style="margin:0"><label>القسم المسؤول (اختياري)</label><select id="analyzeDeptId" class="filter-select" style="width:100%"><option value="">تحديد تلقائي</option></select></div>
+      </div>
+    </div>
+    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()"
+      ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="handleDrop(event)">
+      <span style="font-size:52px;display:block;margin-bottom:16px;">📄</span>
+      <h3 style="font-size:18px;font-weight:800;margin-bottom:8px;">اسحب ملف PDF هنا</h3>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:20px;">أو اضغط الزر أدناه لاختيار الملف</p>
+      <div style="display:inline-flex;align-items:center;gap:8px;background:var(--dark);color:#fff;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;pointer-events:none;">
+        📂 اختر ملف PDF
+      </div>
+      <p style="font-size:11px;color:var(--muted);margin-top:14px;">10 Agents: قانوني • مالي • تقني • مخاطر • استراتيجية • توزيع مهام • قرار نهائي</p>
+    </div>
+    <input type="file" id="fileInput" accept=".pdf" style="display:none" onchange="if(this.files[0])uploadFile(this.files[0])">
+    <div id="uploadProgress" style="display:none;margin-top:16px;">
+      <div class="card"><div style="padding:22px 24px;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+          <div style="font-size:16px;font-weight:800;" id="progressLabel">جارٍ التحليل...</div>
+          <div style="background:var(--green3);color:var(--green2);padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700;font-family:var(--mono);" id="progressPct">0%</div>
+        </div>
+        <div class="progress-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+        <div style="font-size:12px;color:var(--muted);margin-top:5px;" id="progressSub"></div>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:12px;" id="agentsProgress"></div>
+      </div></div>
+    </div>
+  </div>
+  <div id="resultsSection" style="display:none;"></div>
+</div>
+
+<!-- ═══ TENDERS LIST ═══ -->
+<div class="page" id="page-tenders">
+  <div class="page-header">
+    <div class="page-title"><h1>📂 سجل المناقصات</h1><p>أرشيف ذكي لجميع المناقصات</p></div>
+    <button class="btn btn-primary" onclick="showPage('analyze')">📤 مناقصة جديدة</button>
+  </div>
+  <div class="stats-grid" id="tendersStats"></div>
+  <div class="card">
+    <div class="card-header">
+      <h3>📋 المناقصات</h3>
+      <div class="card-tools">
+        <input class="search-bar" placeholder="🔍 بحث..." oninput="filterTenders(this.value)" style="width:200px">
+        <select class="filter-select" onchange="filterTenderVerdict(this.value)"><option value="">كل القرارات</option><option value="PROCEED">✅ المضي</option><option value="CLARIFY">⚠️ توضيح</option><option value="RISK">❌ مخاطر</option><option value="REJECT">🚫 رفض</option></select>
+        <select class="filter-select" onchange="filterTenderStatus(this.value)"><option value="">كل الحالات</option><option value="مكتملة">مكتملة</option><option value="قيد التحليل">قيد التحليل</option></select>
+      </div>
+    </div>
+    <div class="tbl-wrap"><table class="table">
+      <thead><tr><th>المناقصة</th><th>العميل</th><th>القرار</th><th>الدرجة</th><th>نسبة الفوز</th><th>المخاطر</th><th>الحالة</th><th>التاريخ</th><th></th></tr></thead>
+      <tbody id="tendersTbody"></tbody>
+    </table></div>
   </div>
 </div>
 
@@ -552,6 +623,41 @@ body{background:var(--bg);color:var(--dark);font-family:var(--font);min-height:1
   </div>
 </div>
 
+<!-- Tender Detail Modal (Admin) -->
+<div class="modal-overlay" id="adminTenderModal">
+  <div class="modal" style="max-width:800px;">
+    <div class="modal-header">
+      <div>
+        <div style="display:flex;gap:6px;margin-bottom:6px;" id="atm-badges"></div>
+        <h3 id="atm-title" style="font-size:18px;font-weight:800;"></h3>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;" id="atm-meta"></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:flex-start;">
+        <button class="btn btn-green btn-sm" onclick="downloadTenderPDF()">⬇️ تحميل PDF</button>
+        <button class="modal-close" onclick="closeModal('adminTenderModal')">✕</button>
+      </div>
+    </div>
+    <div id="atm-body"></div>
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);" id="atm-assign-section">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:700;">👷 تكليف موظفين بهذه المناقصة</div>
+        <button class="btn btn-green btn-sm" onclick="suggestEmployees()" id="suggestBtn">🤖 اقتراح ذكي بالـ AI</button>
+      </div>
+      <div id="aiSuggestionsBox" style="display:none;background:var(--green4);border:1px solid var(--green);border-radius:10px;padding:14px;margin-bottom:14px;">
+        <div style="font-size:12px;font-weight:700;color:var(--green2);margin-bottom:10px;">✨ اقتراحات الذكاء الاصطناعي</div>
+        <div id="aiSuggestionsList"></div>
+        <div style="font-size:12px;color:var(--muted);margin-top:8px;font-style:italic;" id="aiAssignNotes"></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;" id="atm-emp-checkboxes"></div>
+      <div class="field"><label>ملاحظات التكليف</label><input id="atm-assign-notes" placeholder="ملاحظات اختيارية..."></div>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button class="btn btn-primary" onclick="saveAssignment()">حفظ التكليف</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteTenderAdmin()">🗑 حذف المناقصة</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -627,12 +733,24 @@ function renderUsers(users){
 function filterUsers(q){renderUsers(allUsers.filter(u=>u.full_name.includes(q)||u.email.includes(q)||(u.company||'').includes(q)));}
 function showAddUser(){document.getElementById('addUserModal').classList.add('show');}
 async function createUser(){
-  const d={full_name:v('nu-name'),email:v('nu-email'),company:v('nu-company'),department:v('nu-dept'),phone:v('nu-phone'),role:v('nu-role'),password:v('nu-pass')};
-  if(!d.full_name||!d.email||!d.password){toast('يرجى ملء الحقول المطلوبة','error');return;}
-  const r=await fetch(`${API}/users/`,{method:'POST',headers:H,body:JSON.stringify(d)});
-  const rs=await r.json();
-  if(!r.ok){toast(rs.detail||'خطأ','error');return;}
-  toast('تم إنشاء الحساب ✅'); closeModal('addUserModal'); loadUsers();
+  try{
+    const d={full_name:v('nu-name'),email:v('nu-email'),company:v('nu-company'),department:v('nu-dept'),phone:v('nu-phone'),role:v('nu-role'),password:v('nu-pass')};
+    if(!d.full_name){toast('أدخل الاسم الكامل','error');return;}
+    if(!d.email){toast('أدخل البريد الإلكتروني','error');return;}
+    if(!d.password||d.password.length<6){toast('كلمة السر 6 أحرف على الأقل','error');return;}
+    const r=await fetch(`${API}/users/`,{method:'POST',headers:H,body:JSON.stringify(d)});
+    const rs=await r.json();
+    if(!r.ok){toast(rs.detail||'خطأ في الإنشاء','error');return;}
+    toast('تم إنشاء الحساب بنجاح ✅');
+    closeModal('addUserModal');
+    // مسح الحقول
+    ['nu-name','nu-email','nu-company','nu-dept','nu-phone','nu-pass'].forEach(id=>setV(id,''));
+    setV('nu-role','user');
+    loadUsers();
+  }catch(e){
+    console.error('createUser error:',e);
+    toast('تعذّر الاتصال بالخادم','error');
+  }
 }
 function showResetPass(uid){document.getElementById('rp-uid').value=uid;document.getElementById('rp-pass').value='';document.getElementById('resetPassModal').classList.add('show');}
 async function doResetPass(){
@@ -1006,8 +1124,727 @@ function toast(msg,type='success'){
   clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),3200);
 }
 
+// ── UPLOAD & ANALYZE ─────────────────────────────────────
+function handleDrop(e){
+  e.preventDefault();
+  document.getElementById('uploadZone').classList.remove('drag');
+  const f=e.dataTransfer.files[0];
+  if(f&&f.name.toLowerCase().endsWith('.pdf')) uploadFile(f);
+  else toast('ملفات PDF فقط','error');
+}
+
+const AGENTS_LIST=[
+  {n:'📄 Document',d:'استخراج بيانات المناقصة',p:8},
+  {n:'⚖️ Legal',d:'تحليل الشروط القانونية',p:18},
+  {n:'💰 Financial',d:'تحليل الربحية',p:30},
+  {n:'🔧 Technical',d:'المتطلبات التقنية',p:42},
+  {n:'⚠️ Risk',d:'تحليل المخاطر',p:54},
+  {n:'🎯 Client',d:'تقييم توافق العميل',p:64},
+  {n:'📊 Strategy',d:'استراتيجية الدخول',p:74},
+  {n:'👥 Assignment',d:'توزيع المهام',p:82},
+  {n:'📚 History',d:'الأرشفة الذكية',p:90},
+  {n:'✅ Summary',d:'القرار النهائي',p:97},
+];
+
+async function uploadFile(file){
+  if(!file) return;
+  // Show progress, hide zone
+  document.getElementById('uploadProgress').style.display='block';
+  const bar=document.getElementById('progressBar');
+  const label=document.getElementById('progressLabel');
+  const sub=document.getElementById('progressSub');
+  const pct=document.getElementById('progressPct');
+  const ap=document.getElementById('agentsProgress');
+  if(ap) ap.innerHTML=AGENTS_LIST.map((a,i)=>
+    `<div id="agp${i}" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:6px 8px;font-size:10px;font-weight:600;color:var(--muted);text-align:center;transition:all .3s">${a.n}</div>`
+  ).join('');
+  let ai=0;
+  const timer=setInterval(()=>{
+    if(ai<AGENTS_LIST.length){
+      const a=AGENTS_LIST[ai];
+      if(bar) bar.style.width=a.p+'%';
+      if(pct) pct.textContent=a.p+'%';
+      if(label) label.textContent=a.n;
+      if(sub) sub.textContent=a.d;
+      if(ai>0){const prev=document.getElementById('agp'+(ai-1));if(prev){prev.style.background='var(--green3)';prev.style.borderColor='var(--green)';prev.style.color='var(--green2)';}}
+      const curr=document.getElementById('agp'+ai);if(curr){curr.style.background='#fef3c7';curr.style.borderColor='#fcd34d';curr.style.color='#92400e';}
+      ai++;
+    }
+  },2400);
+  const fd=new FormData();
+  fd.append('file',file);
+  const cid=document.getElementById('analyzeClientId')?.value||'';
+  const url=cid?`${API}/analyze/?client_id=${cid}`:`${API}/analyze/`;
+  try{
+    const r=await fetch(url,{method:'POST',headers:{'Authorization':'Bearer '+token},body:fd});
+    clearInterval(timer);
+    if(bar)bar.style.width='100%';if(pct)pct.textContent='100%';
+    if(label)label.textContent='اكتمل التحليل ✅';
+    AGENTS_LIST.forEach((_,i)=>{const el=document.getElementById('agp'+i);if(el){el.style.background='var(--green3)';el.style.borderColor='var(--green)';el.style.color='var(--green2)';}});
+    if(!r.ok){
+      const e=await r.json();
+      // Gatekeeper rejection
+      if(e.detail && e.detail.error==='not_a_tender'){
+        const d=e.detail;
+        document.getElementById('uploadProgress').style.display='none';
+        document.getElementById('resultsSection').style.display='block';
+        document.getElementById('uploadSection').style.display='none';
+        document.getElementById('resultsSection').innerHTML=`
+          <div style="text-align:center;padding:48px 32px;background:var(--white);border:1px solid var(--border);border-radius:16px;">
+            <div style="font-size:64px;margin-bottom:16px;">🚫</div>
+            <h2 style="font-size:22px;font-weight:900;color:var(--red);margin-bottom:8px">هذا الملف ليس وثيقة مناقصة</h2>
+            <div style="display:inline-block;background:#fee2e2;color:var(--red);padding:6px 18px;border-radius:8px;font-size:14px;font-weight:700;margin-bottom:20px">
+              تم اكتشافه كـ: ${d.document_type||'وثيقة غير معروفة'}
+            </div>
+            <p style="font-size:14px;color:var(--muted);max-width:500px;margin:0 auto 24px;line-height:1.7">${d.reason||d.message||''}</p>
+            <div style="background:#f8faf8;border:1px solid var(--border);border-radius:12px;padding:18px 24px;max-width:480px;margin:0 auto 24px;text-align:right;">
+              <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">نصيحة النظام</div>
+              <p style="font-size:13px;color:var(--dark);line-height:1.7">
+                يقبل النظام فقط وثائق المناقصات والعطاءات والطروحات الرسمية التي تحتوي على شروط تقديم وعروض أسعار. تأكد من رفع الوثيقة الصحيحة.
+              </p>
+            </div>
+            <button class="btn btn-primary" onclick="resetUpload()">↩ رفع ملف آخر</button>
+          </div>`;
+        return;
+      }
+      toast(e.detail||'خطأ في التحليل','error');
+      document.getElementById('uploadProgress').style.display='none';
+      return;
+    }
+    const data=await r.json();
+    setTimeout(()=>{
+      document.getElementById('uploadProgress').style.display='none';
+      renderAnalysisResults(data);
+    },800);
+  }catch(err){
+    clearInterval(timer);
+    console.error(err);
+    toast('تعذّر الاتصال بالخادم','error');
+    document.getElementById('uploadProgress').style.display='none';
+  }
+}
+
+function renderAnalysisResults(data){
+  document.getElementById('resultsSection').style.display='block';
+  document.getElementById('uploadSection').style.display='none';
+  const fd=data.final_decision||{},ra=data.risk_analysis||{},ca=data.client_evaluation||{};
+  const doc=data.document_summary||{},legal=data.legal_analysis||{};
+  const fin=data.financial_analysis||{},tech=data.technical_analysis||{};
+  const st=data.strategy_analysis||{},assign=data.assignments||{},hist=data.history_summary||{};
+  const vc=fd.verdict_color||'yellow';
+  const vbMap={green:'background:linear-gradient(135deg,#d4edda,#eaf5ed);border:1px solid #86efac;',yellow:'background:linear-gradient(135deg,#fef3c7,#fffbeb);border:1px solid #fcd34d;',red:'background:linear-gradient(135deg,#fee2e2,#fff5f5);border:1px solid #fca5a5;'};
+  const vbStyle=vbMap[vc]||vbMap.yellow;
+  const srBg={green:'#d4edda',yellow:'#fef3c7',red:'#fee2e2'}[vc]||'#fef3c7';
+  const srClr={green:'var(--green2)',yellow:'#92400e',red:'var(--red)'}[vc]||'#92400e';
+  const vIco={green:'✅',yellow:'⚠️',red:'❌'}[vc]||'⚠️';
+  const sc=(s)=>(s||0)>=70?'#22a34e':(s||0)>=45?'#d97706':'#dc2626';
+  const ch=(n,l,ic)=>`<div style="background:var(--white);border:1px solid var(--border);border-radius:10px;padding:10px 14px;text-align:center;min-width:80px"><div style="font-size:18px;font-weight:900;font-family:var(--mono)">${ic} ${n}</div><div style="font-size:10px;color:var(--muted);margin-top:2px">${l}</div></div>`;
+  const mAgent=(icon,name,sub,score,summary)=>`<div class="card"><div style="padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px"><span style="font-size:18px">${icon}</span><div style="flex:1"><div style="font-size:13px;font-weight:700">${name}</div><div style="font-size:10px;color:var(--muted)">${sub}</div></div><div style="font-size:20px;font-weight:900;font-family:var(--mono);color:${sc(score)}">${score}</div></div><div style="padding:10px 14px;font-size:12px;color:var(--muted);line-height:1.6">${summary}</div></div>`;
+
+  document.getElementById('resultsSection').innerHTML=`
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:12px">
+    <div>
+      <h2 style="font-size:18px;font-weight:800">📄 ${doc.title||data.filename}</h2>
+      <p style="font-size:12px;color:var(--muted);margin-top:3px">${data.pages||0} صفحة${data.tender_id?' • <a href="#" onclick="viewTender(\''+data.tender_id+'\')" style="color:var(--green)">عرض في السجل ↗</a>':''}</p>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-green btn-sm" onclick="downloadAnalysisPDF()">⬇️ تحميل التحليل PDF</button>
+      <button class="btn btn-ghost btn-sm" onclick="resetUpload()">↩ تحليل جديد</button>
+    </div>
+  </div>
+  <div style="${vbStyle}border-radius:14px;padding:20px 24px;display:flex;align-items:center;gap:16px;margin-bottom:18px;flex-wrap:wrap">
+    <div style="font-size:38px;flex-shrink:0">${vIco}</div>
+    <div style="flex:1">
+      <div style="font-size:20px;font-weight:900">${fd.decision_ar||'—'}</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:4px;line-height:1.6">${fd.executive_summary||''}</div>
+      ${Array.isArray(fd.key_reasons)&&fd.key_reasons.length?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${fd.key_reasons.map(r=>`<span style="background:rgba(0,0,0,.08);border-radius:6px;padding:2px 10px;font-size:11px">${r}</span>`).join('')}</div>`:''}
+    </div>
+    <div style="width:68px;height:68px;border-radius:50%;background:${srBg};display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;font-family:var(--mono);color:${srClr};flex-shrink:0;margin-right:auto">${fd.overall_score||0}</div>
+  </div>
+  <div style="background:linear-gradient(135deg,var(--dark),#1a3a20);border-radius:14px;overflow:hidden;margin-bottom:18px">
+    <div style="padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+      <div style="color:#fff;font-size:15px;font-weight:800">🎯 Strategy Agent — استراتيجية الدخول</div>
+      <span style="background:rgba(34,163,78,.2);border:1px solid rgba(34,163,78,.4);color:var(--green);padding:4px 14px;border-radius:8px;font-size:13px;font-weight:800">${st.approach||'—'}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:16px 20px">
+      <div style="background:rgba(255,255,255,.06);border-radius:10px;padding:12px;text-align:center"><div style="font-size:17px;font-weight:900;color:#fff">${st.bid_decision||'—'}</div><div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:3px">قرار الدخول</div></div>
+      <div style="background:rgba(255,255,255,.06);border-radius:10px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:900;font-family:var(--mono);color:var(--green)">${st.win_probability||'—'}</div><div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:3px">نسبة الفوز</div></div>
+      <div style="background:rgba(255,255,255,.06);border-radius:10px;padding:12px;text-align:center"><div style="font-size:15px;font-weight:900;color:#fff">${st.suggested_price||'—'}</div><div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:3px">السعر المقترح</div></div>
+    </div>
+    <div style="padding:0 20px 16px">
+      <div style="background:rgba(34,163,78,.12);border-right:3px solid var(--green);border-radius:8px;padding:12px 16px;font-size:13px;color:rgba(255,255,255,.8);line-height:1.7;margin-bottom:10px">${st.approach_description||'—'}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div><div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.3);margin-bottom:7px">✅ المزايا التنافسية</div>${(Array.isArray(st.competitive_advantages)?st.competitive_advantages:[]).map(a=>`<div style="font-size:12px;color:rgba(255,255,255,.6);padding:4px 0;border-bottom:1px solid rgba(255,255,255,.05)">• ${a}</div>`).join('')||'—'}</div>
+        <div><div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.3);margin-bottom:7px">⚠️ شروط الدخول</div>${(Array.isArray(st.key_conditions)?st.key_conditions:[]).map(c=>`<div style="font-size:12px;color:rgba(255,255,255,.6);padding:4px 0;border-bottom:1px solid rgba(255,255,255,.05)">• ${c}</div>`).join('')||'—'}</div>
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px">
+    ${ch(data.overall_score||0,'الكلية','⭐')}${ch(data.risk_score||0,'المخاطر','⚠️')}${ch(data.fit_score||0,'التوافق','🎯')}
+    ${ch(legal.legal_score||0,'القانوني','⚖️')}${ch(fin.financial_score||0,'المالي','💰')}${ch(tech.technical_score||0,'التقني','🔧')}
+    ${ch(doc.requirements?.length||0,'متطلب','📋')}${ch(doc.deadlines?.length||0,'موعد','📅')}${ch(Array.isArray(ra.alerts)?ra.alerts.length:0,'تنبيه','🚨')}
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-bottom:18px">
+    ${mAgent('⚖️','Legal Agent','قانوني',legal.legal_score||0,legal.summary||'—')}
+    ${mAgent('💰','Financial Agent',fin.profitability_assessment||'مالي',fin.financial_score||0,fin.summary||'—')}
+    ${mAgent('🔧','Technical Agent','تقني',tech.technical_score||0,tech.summary||'—')}
+    ${mAgent('⚠️','Risk Agent',ra.overall_risk_level||'مخاطر',ra.risk_score||0,ra.summary||'—')}
+    ${mAgent('🎯','Client Agent',ca.recommendation||'تقييم',ca.fit_score||0,ca.reason||'—')}
+    <div class="card"><div style="padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px"><span style="font-size:18px">👥</span><div><div style="font-size:13px;font-weight:700">Assignment Agent</div><div style="font-size:10px;color:var(--muted)">${assign.primary_department||'توزيع المهام'}</div></div></div><div style="padding:10px 14px">${(Array.isArray(assign.assignments)?assign.assignments:[]).slice(0,3).map(a=>`<div style="font-size:12px;padding:4px 0;border-bottom:1px solid #f0f4f0"><strong>${a.department}</strong> — ${a.task}</div>`).join('')||'<div style="font-size:12px;color:var(--muted)">—</div>'}</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px">
+    <div class="card"><div class="card-header"><h3>📋 المتطلبات (${doc.requirements?.length||0})</h3></div>
+      <div style="max-height:240px;overflow-y:auto">${(Array.isArray(doc.requirements)?doc.requirements:[]).map(r=>`<div class="req-item"><div class="req-dot" style="background:${r.is_mandatory?'var(--red)':'var(--muted)'}"></div><div class="req-text"><strong>${r.title}</strong><p>${r.description}</p></div></div>`).join('')||'<div class="empty-state"><span class="ei">📋</span><p>لا متطلبات</p></div>'}</div></div>
+    <div class="card"><div class="card-header"><h3>📅 المواعيد (${doc.deadlines?.length||0})</h3></div>
+      <div style="max-height:240px;overflow-y:auto">${(Array.isArray(doc.deadlines)?doc.deadlines:[]).map(d=>`<div class="req-item"><div class="req-dot" style="background:${d.is_critical?'var(--red)':'var(--muted)'}"></div><div class="req-text"><strong>${d.event}</strong><p>${d.date_text}</p></div></div>`).join('')||'<div class="empty-state"><span class="ei">📅</span><p>لا مواعيد</p></div>'}</div></div>
+  </div>
+  ${Array.isArray(ra.alerts)&&ra.alerts.length?`<div class="card" style="margin-bottom:18px"><div class="card-header"><h3>🚨 التنبيهات (${ra.alerts.length})</h3></div>${ra.alerts.map(a=>`<div style="display:flex;gap:10px;align-items:center;padding:10px 16px;border-bottom:1px solid #f0f4f0"><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:5px;white-space:nowrap;background:${a.level==='خطر'?'#fee2e2':a.level==='تحذير'?'#fef3c7':'#dbeafe'};color:${a.level==='خطر'?'var(--red)':a.level==='تحذير'?'#92400e':'var(--blue)'}">${a.level}</span><span style="font-size:13px">${a.message}</span></div>`).join('')}</div>`:''}
+  ${Array.isArray(fd.action_items)&&fd.action_items.length?`<div class="card" style="margin-bottom:18px"><div class="card-header"><h3>✅ المهام الفورية (${fd.action_items.length})</h3></div>${fd.action_items.map(a=>`<div style="display:flex;gap:10px;align-items:center;padding:10px 16px;border-bottom:1px solid #f0f4f0"><span class="badge b-urgent" style="font-size:10px">${a.priority}</span><span style="font-size:13px">${a.action} — <em style="color:var(--muted)">${a.responsible}</em></span></div>`).join('')}</div>`:''}
+  ${Array.isArray(fd.questions_for_client)&&fd.questions_for_client.length?`<div class="card" style="margin-bottom:18px"><div class="card-header"><h3>❓ أسئلة الاستيضاح (${fd.questions_for_client.length})</h3><button class="btn btn-ghost btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('qListA').innerText).then(()=>toast('تم النسخ ✅'))">نسخ</button></div><div id="qListA">${fd.questions_for_client.map(q=>`<div style="display:flex;gap:10px;align-items:flex-start;padding:10px 16px;border-bottom:1px solid #f0f4f0"><span style="background:var(--bg);border:1px solid var(--border);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">${q.number}</span><div><p style="font-size:13px;margin-top:2px">${q.question}</p></div></div>`).join('')}</div></div>`:''}
+  ${hist.archive_summary?`<div class="card" style="margin-bottom:18px"><div class="card-header"><h3>📚 History Agent — الأرشيف</h3></div><div style="padding:16px 20px"><p style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:10px">${hist.archive_summary}</p>${Array.isArray(hist.tags)&&hist.tags.length?`<div>${hist.tags.map(t=>`<span style="background:var(--bg);border:1px solid var(--border);border-radius:6px;font-size:10px;padding:2px 8px;color:var(--muted);display:inline-block;margin:2px">${t}</span>`).join('')}</div>`:''}</div></div>`:''}
+  <div class="card">
+    <div class="card-header"><h3>🤖 استفسر عن المناقصة</h3></div>
+    <div id="chatBoxA" style="height:260px;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:var(--bg)"><div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:10px 14px;font-size:13.5px;max-width:78%">مرحباً! التحليل الكامل محفوظ. اسألني أي شيء عن هذه المناقصة.</div></div>
+    <div style="display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--border)">
+      <input style="flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:9px;font-family:var(--font);font-size:14px;outline:none" id="chatInputA" placeholder="اكتب سؤالك..." onkeydown="if(event.key==='Enter')sendChatA()">
+      <button class="btn btn-primary" onclick="sendChatA()">إرسال</button>
+    </div>
+  </div>`;
+  window._analysisSession=data.session_id;
+  window._lastAnalysisData=data;
+}
+
+function resetUpload(){
+  document.getElementById('resultsSection').style.display='none';
+  document.getElementById('uploadSection').style.display='block';
+  document.getElementById('resultsSection').innerHTML='';
+  document.getElementById('fileInput').value='';
+  window._analysisSession=null;
+  window._lastAnalysisData=null;
+}
+
+function downloadAnalysisPDF(){
+  const data=window._lastAnalysisData;
+  if(!data){toast('لا يوجد تحليل للتحميل','error');return;}
+  const fd=data.final_decision||{},ra=data.risk_analysis||{},ca=data.client_evaluation||{};
+  const doc=data.document_summary||{},legal=data.legal_analysis||{};
+  const fin=data.financial_analysis||{},tech=data.technical_analysis||{};
+  const st=data.strategy_analysis||{},assign=data.assignments||{},hist=data.history_summary||{};
+  const vc=fd.verdict_color||'yellow';
+  const vColor={green:'#22a34e',yellow:'#d97706',red:'#dc2626'}[vc]||'#d97706';
+  const vIco={green:'✅',yellow:'⚠️',red:'❌'}[vc]||'⚠️';
+  const sc=(s)=>(s||0)>=70?'#22a34e':(s||0)>=45?'#d97706':'#dc2626';
+  const now=new Date().toLocaleDateString('ar-SA',{year:'numeric',month:'long',day:'numeric'});
+
+  const html=`<!DOCTYPE html><html lang="ar" dir="rtl">
+<head><meta charset="UTF-8">
+<title>تقرير تحليل المناقصة — ${doc.title||data.filename}</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Tajawal',sans-serif;color:#0d1f14;background:#fff;font-size:13px;line-height:1.6;}
+.page{max-width:800px;margin:0 auto;padding:40px;}
+/* Header */
+.report-header{background:linear-gradient(135deg,#0d1f14,#1a3a20);color:#fff;padding:32px 36px;border-radius:14px;margin-bottom:28px;display:flex;justify-content:space-between;align-items:flex-start;}
+.report-logo{font-size:28px;font-weight:900;letter-spacing:-1px;}
+.report-logo span{color:#22a34e;}
+.report-meta{text-align:left;font-size:11px;color:rgba(255,255,255,.5);}
+.report-title{font-size:22px;font-weight:900;margin-top:16px;color:#fff;}
+.report-sub{font-size:13px;color:rgba(255,255,255,.5);margin-top:4px;}
+/* Verdict */
+.verdict-box{border-radius:12px;padding:20px 24px;margin-bottom:20px;display:flex;align-items:center;gap:16px;border:2px solid ${vColor}22;background:${vColor}0a;}
+.verdict-icon{font-size:36px;flex-shrink:0;}
+.verdict-title{font-size:22px;font-weight:900;color:${vColor};}
+.verdict-exp{font-size:13px;color:#555;margin-top:4px;line-height:1.6;}
+.score-circle{width:68px;height:68px;border-radius:50%;background:${vColor}15;border:3px solid ${vColor};display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:${vColor};flex-shrink:0;margin-right:auto;}
+/* Scores Grid */
+.scores-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
+.score-card{background:#f8faf8;border:1px solid #dce8de;border-radius:10px;padding:14px;text-align:center;}
+.score-num{font-size:26px;font-weight:900;font-family:monospace;}
+.score-label{font-size:11px;color:#6b7f6b;margin-top:3px;}
+/* Strategy */
+.strategy-box{background:#0d1f14;color:#fff;border-radius:12px;padding:20px 24px;margin-bottom:20px;}
+.strategy-title{font-size:14px;font-weight:800;color:#22a34e;margin-bottom:12px;}
+.strategy-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
+.strategy-stat{background:rgba(255,255,255,.07);border-radius:8px;padding:11px;text-align:center;}
+.strategy-stat-num{font-size:16px;font-weight:900;color:#fff;}
+.strategy-stat-label{font-size:9px;color:rgba(255,255,255,.4);margin-top:2px;}
+.strategy-desc{background:rgba(34,163,78,.1);border-right:3px solid #22a34e;border-radius:6px;padding:10px 14px;font-size:12px;color:rgba(255,255,255,.8);line-height:1.7;margin-bottom:12px;}
+.strategy-lists{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.sl-title{font-size:10px;font-weight:700;color:rgba(255,255,255,.3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;}
+.sl-item{font-size:11px;color:rgba(255,255,255,.6);padding:3px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+/* Section */
+.section{margin-bottom:20px;}
+.section-title{font-size:12px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:#6b7f6b;border-bottom:2px solid #dce8de;padding-bottom:6px;margin-bottom:12px;}
+/* Agent Row */
+.agent-row{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid #f0f4f0;}
+.agent-row:last-child{border-bottom:none;}
+.agent-icon-box{width:36px;height:36px;border-radius:9px;background:#eaf5ed;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.agent-info{flex:1;}
+.agent-name{font-size:13px;font-weight:800;}
+.agent-sub{font-size:11px;color:#6b7f6b;}
+.agent-summary{font-size:12px;color:#444;margin-top:4px;line-height:1.5;}
+.agent-score-badge{font-size:18px;font-weight:900;font-family:monospace;flex-shrink:0;}
+/* Requirements */
+.req-item{display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-bottom:1px solid #f0f4f0;}
+.req-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.req-title{font-size:12px;font-weight:700;}
+.req-desc{font-size:11px;color:#6b7f6b;margin-top:2px;}
+/* Alert */
+.alert-item{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #f0f4f0;}
+.alert-badge{font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;white-space:nowrap;}
+.alert-msg{font-size:12px;}
+/* Action */
+.action-item{display:flex;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid #f0f4f0;}
+.priority-badge{font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;background:#fef3c7;color:#92400e;}
+/* Question */
+.q-item{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid #f0f4f0;}
+.q-num{width:22px;height:22px;border-radius:50%;background:#f0f4f0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;}
+/* Footer */
+.report-footer{margin-top:32px;padding-top:16px;border-top:1px solid #dce8de;display:flex;justify-content:space-between;font-size:11px;color:#6b7f6b;}
+/* Print */
+@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact;}.page{padding:20px;max-width:100%;}}
+</style></head>
+<body><div class="page">
+
+<div class="report-header">
+  <div>
+    <div class="report-logo">م<span>ن</span>جز</div>
+    <div class="report-title">${doc.title||data.filename}</div>
+    <div class="report-sub">${data.pages||0} صفحة • تم التحليل بـ 10 Agents ذكاء اصطناعي</div>
+  </div>
+  <div class="report-meta">
+    <div>تاريخ التحليل</div>
+    <div style="color:#fff;font-weight:700;margin-top:3px">${now}</div>
+    <div style="margin-top:10px">منجز Enterprise v3.0</div>
+  </div>
+</div>
+
+<div class="verdict-box">
+  <div class="verdict-icon">${vIco}</div>
+  <div style="flex:1">
+    <div class="verdict-title">${fd.decision_ar||'—'}</div>
+    <div class="verdict-exp">${fd.executive_summary||''}</div>
+    ${Array.isArray(fd.key_reasons)&&fd.key_reasons.length?`<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">${fd.key_reasons.map(r=>`<span style="background:rgba(0,0,0,.06);border-radius:6px;padding:2px 10px;font-size:11px">${r}</span>`).join('')}</div>`:''}
+  </div>
+  <div class="score-circle">${fd.overall_score||0}</div>
+</div>
+
+<div class="scores-grid">
+  <div class="score-card"><div class="score-num" style="color:${sc(data.overall_score||0)}">${data.overall_score||0}</div><div class="score-label">الدرجة الكلية</div></div>
+  <div class="score-card"><div class="score-num" style="color:${sc(data.risk_score||0)}">${data.risk_score||0}</div><div class="score-label">درجة المخاطر</div></div>
+  <div class="score-card"><div class="score-num" style="color:${sc(data.fit_score||0)}">${data.fit_score||0}</div><div class="score-label">درجة التوافق</div></div>
+  <div class="score-card"><div class="score-num" style="color:${sc(legal.legal_score||0)}">${legal.legal_score||0}</div><div class="score-label">القانوني</div></div>
+  <div class="score-card"><div class="score-num" style="color:${sc(fin.financial_score||0)}">${fin.financial_score||0}</div><div class="score-label">المالي</div></div>
+  <div class="score-card"><div class="score-num" style="color:${sc(tech.technical_score||0)}">${tech.technical_score||0}</div><div class="score-label">التقني</div></div>
+</div>
+
+<div class="strategy-box">
+  <div class="strategy-title">🎯 Strategy Agent — استراتيجية الدخول</div>
+  <div class="strategy-grid">
+    <div class="strategy-stat"><div class="strategy-stat-num">${st.bid_decision||'—'}</div><div class="strategy-stat-label">قرار الدخول</div></div>
+    <div class="strategy-stat"><div class="strategy-stat-num" style="color:#22a34e">${st.win_probability||'—'}</div><div class="strategy-stat-label">نسبة الفوز</div></div>
+    <div class="strategy-stat"><div class="strategy-stat-num">${st.approach||'—'}</div><div class="strategy-stat-label">طريقة الدخول</div></div>
+  </div>
+  <div class="strategy-desc">${st.approach_description||'—'}</div>
+  <div style="margin-bottom:8px"><span style="background:rgba(255,255,255,.1);color:#fff;padding:3px 12px;border-radius:6px;font-size:12px;font-weight:700">السعر المقترح: ${st.suggested_price||'—'}</span></div>
+  <div class="strategy-lists">
+    <div><div class="sl-title">المزايا التنافسية</div>${(Array.isArray(st.competitive_advantages)?st.competitive_advantages:[]).map(a=>`<div class="sl-item">• ${a}</div>`).join('')||'—'}</div>
+    <div><div class="sl-title">شروط الدخول</div>${(Array.isArray(st.key_conditions)?st.key_conditions:[]).map(c=>`<div class="sl-item">• ${c}</div>`).join('')||'—'}</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">تحليل الـ Agents</div>
+  <div class="agent-row"><div class="agent-icon-box">⚖️</div><div class="agent-info"><div class="agent-name">Legal Agent — قانوني</div><div class="agent-summary">${legal.summary||'—'}</div>${Array.isArray(legal.legal_risks)&&legal.legal_risks.length?`<div style="margin-top:6px">${legal.legal_risks.slice(0,3).map(r=>`<div style="font-size:11px;color:#dc2626;padding:2px 0">⚠ ${r}</div>`).join('')}</div>`:''}</div><div class="agent-score-badge" style="color:${sc(legal.legal_score||0)}">${legal.legal_score||0}</div></div>
+  <div class="agent-row"><div class="agent-icon-box">💰</div><div class="agent-info"><div class="agent-name">Financial Agent — ${fin.profitability_assessment||'مالي'}</div><div class="agent-summary">${fin.summary||'—'}</div>${fin.profit_margin_estimate?`<div style="font-size:11px;color:#22a34e;margin-top:4px">هامش الربح المتوقع: ${fin.profit_margin_estimate}</div>`:''}</div><div class="agent-score-badge" style="color:${sc(fin.financial_score||0)}">${fin.financial_score||0}</div></div>
+  <div class="agent-row"><div class="agent-icon-box">🔧</div><div class="agent-info"><div class="agent-name">Technical Agent — تقني</div><div class="agent-summary">${tech.summary||'—'}</div>${Array.isArray(tech.challenges)&&tech.challenges.length?`<div style="margin-top:6px">${tech.challenges.slice(0,2).map(c=>`<div style="font-size:11px;color:#d97706;padding:2px 0">• ${c}</div>`).join('')}</div>`:''}</div><div class="agent-score-badge" style="color:${sc(tech.technical_score||0)}">${tech.technical_score||0}</div></div>
+  <div class="agent-row"><div class="agent-icon-box">⚠️</div><div class="agent-info"><div class="agent-name">Risk Agent — ${ra.overall_risk_level||'مخاطر'}</div><div class="agent-summary">${ra.summary||'—'}</div></div><div class="agent-score-badge" style="color:${sc(ra.risk_score||0)}">${ra.risk_score||0}</div></div>
+  <div class="agent-row"><div class="agent-icon-box">🎯</div><div class="agent-info"><div class="agent-name">Client Agent — ${ca.recommendation||'تقييم'}</div><div class="agent-summary">${ca.reason||'—'}</div>${ca.customized_advice?`<div style="margin-top:5px;font-size:11px;color:#1a7a3a;background:#eaf5ed;padding:6px 10px;border-radius:6px">${ca.customized_advice}</div>`:''}</div><div class="agent-score-badge" style="color:${sc(ca.fit_score||0)}">${ca.fit_score||0}</div></div>
+</div>
+
+${Array.isArray(ra.alerts)&&ra.alerts.length?`<div class="section"><div class="section-title">🚨 التنبيهات (${ra.alerts.length})</div>${ra.alerts.map(a=>`<div class="alert-item"><span class="alert-badge" style="background:${a.level==='خطر'?'#fee2e2':a.level==='تحذير'?'#fef3c7':'#dbeafe'};color:${a.level==='خطر'?'#dc2626':a.level==='تحذير'?'#92400e':'#2563eb'}">${a.level}</span><span class="alert-msg">${a.message}</span></div>`).join('')}</div>`:''}
+
+${Array.isArray(doc.requirements)&&doc.requirements.length?`<div class="section"><div class="section-title">📋 المتطلبات (${doc.requirements.length})</div>${doc.requirements.slice(0,10).map(r=>`<div class="req-item"><div class="req-dot" style="background:${r.is_mandatory?'#dc2626':'#6b7f6b'}"></div><div><div class="req-title">${r.title}</div><div class="req-desc">${r.description}</div></div></div>`).join('')}</div>`:''}
+
+${Array.isArray(doc.deadlines)&&doc.deadlines.length?`<div class="section"><div class="section-title">📅 المواعيد (${doc.deadlines.length})</div>${doc.deadlines.map(d=>`<div class="req-item"><div class="req-dot" style="background:${d.is_critical?'#dc2626':'#6b7f6b'}"></div><div><div class="req-title">${d.event}</div><div class="req-desc">${d.date_text}</div></div></div>`).join('')}</div>`:''}
+
+${Array.isArray(fd.action_items)&&fd.action_items.length?`<div class="section"><div class="section-title">✅ المهام الفورية</div>${fd.action_items.map(a=>`<div class="action-item"><span class="priority-badge">${a.priority}</span><span style="font-size:12px"><strong>${a.action}</strong> — ${a.responsible}</span></div>`).join('')}</div>`:''}
+
+${Array.isArray(fd.questions_for_client)&&fd.questions_for_client.length?`<div class="section"><div class="section-title">❓ أسئلة الاستيضاح (${fd.questions_for_client.length})</div>${fd.questions_for_client.map(q=>`<div class="q-item"><div class="q-num">${q.number}</div><div style="font-size:12px">${q.question}</div></div>`).join('')}</div>`:''}
+
+${hist.archive_summary?`<div class="section"><div class="section-title">📚 الأرشيف والتوثيق</div><p style="font-size:13px;color:#444;line-height:1.7;margin-bottom:10px">${hist.archive_summary}</p>${Array.isArray(hist.key_points)&&hist.key_points.length?hist.key_points.map(p=>`<div style="font-size:12px;padding:3px 0;border-bottom:1px solid #f0f4f0">• ${p}</div>`).join(''):''}${Array.isArray(hist.tags)&&hist.tags.length?`<div style="margin-top:10px">${hist.tags.map(t=>`<span style="background:#f0f4f0;border-radius:5px;font-size:10px;padding:2px 8px;color:#6b7f6b;display:inline-block;margin:2px">${t}</span>`).join('')}</div>`:''}</div>`:''}
+
+${fd.strategic_advice?`<div style="background:#0d1f14;color:#fff;border-radius:10px;padding:16px 20px;margin-top:16px"><div style="font-size:11px;font-weight:700;color:#22a34e;margin-bottom:6px">💡 النصيحة الاستراتيجية النهائية</div><div style="font-size:13px;line-height:1.7">${fd.strategic_advice}</div></div>`:''}
+
+<div class="report-footer">
+  <div>منجز Enterprise v3.0 — تحليل ذكاء اصطناعي بـ 10 Agents</div>
+  <div>${now}</div>
+</div>
+
+</div></body></html>`;
+
+  const win=window.open('','_blank');
+  win.document.write(html);
+  win.document.close();
+  win.onload=()=>{
+    setTimeout(()=>{
+      win.print();
+    },500);
+  };
+}
+
+
+
+async function sendChatA(){
+  const inp=document.getElementById('chatInputA');
+  const q=inp.value.trim();if(!q)return;
+  if(!window._analysisSession){toast('أعد رفع الملف','error');return;}
+  const box=document.getElementById('chatBoxA');
+  box.innerHTML+=`<div style="background:var(--dark);color:#fff;border-radius:12px;padding:10px 14px;font-size:13.5px;align-self:flex-end;max-width:78%;margin-right:auto">${q}</div>`;
+  inp.value='';box.scrollTop=box.scrollHeight;
+  box.innerHTML+=`<div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:10px 14px;font-size:13.5px;max-width:78%" id="aiTypingA">⏳ يفكر...</div>`;
+  try{
+    const r=await fetch(`${API}/chat/`,{method:'POST',headers:H,body:JSON.stringify({session_id:window._analysisSession,question:q})});
+    const d=await r.json();
+    document.getElementById('aiTypingA').textContent=d.answer||'—';
+  }catch(e){document.getElementById('aiTypingA').textContent='تعذّر الاتصال';}
+  box.scrollTop=box.scrollHeight;
+}
+
 // Close modals on overlay click
 document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('show');}));
+
+// ── ADMIN TENDERS ──────────────────────────────────────────
+let allAdminTenders=[],adminVerdictFilter='',adminStatusFilter='';
+let currentAdminTender=null;
+
+async function loadAdminTenders(){
+  const [stats,tenders]=await Promise.all([
+    fetch(`${API}/tenders/stats`,{headers:H}).then(r=>r.json()).catch(()=>({})),
+    fetch(`${API}/tenders/`,{headers:H}).then(r=>r.json()).catch(()=>[])
+  ]);
+  // Stats
+  const sg=document.getElementById('tenderStatsGrid');
+  if(sg) sg.innerHTML=`
+    <div class="stat-card"><div class="stat-top"><span class="stat-icon">📋</span><span class="stat-badge sg">الكل</span></div><div class="stat-num">${stats.total||0}</div><div class="stat-label">إجمالي المناقصات</div></div>
+    <div class="stat-card"><div class="stat-top"><span class="stat-icon">✅</span><span class="stat-badge sg">المضي</span></div><div class="stat-num">${stats.by_verdict?.PROCEED||0}</div><div class="stat-label">قرار المضي</div></div>
+    <div class="stat-card"><div class="stat-top"><span class="stat-icon">⚠️</span><span class="stat-badge sy">توضيح</span></div><div class="stat-num">${stats.by_verdict?.CLARIFY||0}</div><div class="stat-label">تحتاج توضيح</div></div>
+    <div class="stat-card"><div class="stat-top"><span class="stat-icon">❌</span><span class="stat-badge sr">خطر</span></div><div class="stat-num">${(stats.by_verdict?.RISK||0)+(stats.by_verdict?.REJECT||0)}</div><div class="stat-label">عالية المخاطر</div></div>
+    <div class="stat-card"><div class="stat-top"><span class="stat-icon">⭐</span><span class="stat-badge sb">الدرجة</span></div><div class="stat-num">${stats.avg_score||0}</div><div class="stat-label">متوسط الدرجة</div></div>`;
+  allAdminTenders=tenders; renderAdminTenders(tenders);
+}
+
+function renderAdminTenders(tenders){
+  const tb=document.getElementById('adminTendersTbody');
+  if(!tenders||!tenders.length){tb.innerHTML='<tr><td colspan="10"><div class="empty-state"><span class="ei">📋</span><p>لا توجد مناقصات</p></div></td></tr>';return;}
+  tb.innerHTML=tenders.map(t=>`<tr>
+    <td><strong>${t.title||t.filename}</strong><br><span class="td-muted" style="font-size:10px">${t.filename||''}</span></td>
+    <td>${t.profiles?.full_name||'—'}<br><span class="td-muted">${t.profiles?.company||''}</span></td>
+    <td class="td-muted">${t.clients?.company_name||'—'}</td>
+    <td><span class="badge b-${(t.verdict||'').toUpperCase()}">${verdictAr(t.verdict)}</span></td>
+    <td><span style="font-family:var(--mono);font-weight:800;color:${scoreColor(t.overall_score)}">${t.overall_score||0}</span></td>
+    <td><span style="font-family:var(--mono);color:${scoreColor(t.risk_score)}">${t.risk_score||0}</span></td>
+    <td><span style="font-family:var(--mono);color:${scoreColor(t.fit_score)}">${t.fit_score||0}</span></td>
+    <td><span class="badge b-${(t.status||'').replace(' ','-')}">${t.status||'—'}</span></td>
+    <td class="td-muted">${formatDate(t.created_at)}</td>
+    <td><button class="btn btn-sm btn-ghost" onclick="viewAdminTender('${t.id}')">عرض ↗</button></td>
+  </tr>`).join('');
+}
+
+function filterAdminTenders(q){applyAdminTenderFilters(allAdminTenders.filter(t=>(t.title||t.filename||'').includes(q)||(t.profiles?.full_name||'').includes(q)));}
+function filterAdminTenderVerdict(v){adminVerdictFilter=v;applyAdminTenderFilters(allAdminTenders);}
+function filterAdminTenderStatus(s){adminStatusFilter=s;applyAdminTenderFilters(allAdminTenders);}
+function applyAdminTenderFilters(base){
+  let f=base;
+  if(adminVerdictFilter) f=f.filter(t=>t.verdict===adminVerdictFilter);
+  if(adminStatusFilter) f=f.filter(t=>t.status===adminStatusFilter);
+  renderAdminTenders(f);
+}
+
+async function viewAdminTender(tid){
+  const [t,assignments]=await Promise.all([
+    fetch(`${API}/tenders/${tid}`,{headers:H}).then(r=>r.json()).catch(()=>null),
+    fetch(`${API}/tenders/${tid}/assignments`,{headers:H}).then(r=>r.json()).catch(()=>[])
+  ]);
+  if(!t){toast('تعذر التحميل','error');return;}
+  currentAdminTender=t;
+  const fd=t.final_decision||{};
+  const ra=t.risk_analysis||{};
+  const ca=t.client_evaluation||{};
+  const st=t.strategy_analysis||{};
+  const vIcon={green:'✅',yellow:'⚠️',red:'❌'}[fd.verdict_color]||'⚠️';
+  document.getElementById('atm-title').textContent=t.title||t.filename;
+  document.getElementById('atm-badges').innerHTML=`<span class="badge b-${t.verdict||''}">${verdictAr(t.verdict)}</span><span class="badge b-${(t.status||'').replace(' ','-')}">${t.status}</span>`;
+  document.getElementById('atm-meta').textContent=`${t.profiles?.full_name||'—'} • ${t.clients?.company_name||'بدون عميل'} • ${t.departments?.name||'—'} • ${formatDate(t.created_at)}`;
+
+  document.getElementById('atm-body').innerHTML=`
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;">
+      <div style="background:var(--bg);border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:900;font-family:var(--mono);color:${scoreColor(t.overall_score)}">${t.overall_score||0}</div><div style="font-size:10px;color:var(--muted)">الدرجة الكلية</div></div>
+      <div style="background:var(--bg);border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:900;font-family:var(--mono);color:${scoreColor(t.risk_score)}">${t.risk_score||0}</div><div style="font-size:10px;color:var(--muted)">المخاطر</div></div>
+      <div style="background:var(--bg);border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:900;font-family:var(--mono);color:${scoreColor(t.fit_score)}">${t.fit_score||0}</div><div style="font-size:10px;color:var(--muted)">التوافق</div></div>
+      <div style="background:var(--bg);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:900;color:var(--green)">${st.win_probability||'—'}</div><div style="font-size:10px;color:var(--muted)">نسبة الفوز</div></div>
+    </div>
+    ${fd.executive_summary?`<div style="background:var(--green4);border-right:3px solid var(--green);border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px;line-height:1.7">${vIcon} ${fd.executive_summary}</div>`:''}
+    ${st.bid_decision?`<div style="background:var(--bg);border-radius:8px;padding:12px;margin-bottom:12px;">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;">🎯 استراتيجية الدخول</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <span style="background:var(--green3);color:var(--green2);padding:4px 12px;border-radius:6px;font-size:12px;font-weight:700">${st.bid_decision}</span>
+        <span style="background:#f3f4f6;padding:4px 12px;border-radius:6px;font-size:12px">${st.approach||''}</span>
+        <span style="background:#dbeafe;color:#1d4ed8;padding:4px 12px;border-radius:6px;font-size:12px">${st.suggested_price||''}</span>
+      </div>
+    </div>`:''}
+    ${Array.isArray(ra.alerts)&&ra.alerts.length?`<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px">🚨 التنبيهات (${ra.alerts.length})</div>${ra.alerts.slice(0,3).map(a=>`<div style="font-size:12px;padding:5px 8px;background:#fee2e2;border-radius:6px;margin-bottom:4px">• ${a.message||a}</div>`).join('')}</div>`:''}
+    ${Array.isArray(fd.action_items)&&fd.action_items.length?`<div><div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px">✅ المهام المطلوبة</div>${fd.action_items.slice(0,4).map(a=>`<div style="font-size:12px;padding:5px 8px;background:var(--bg);border-radius:6px;margin-bottom:4px;display:flex;gap:8px"><span style="background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:4px;font-size:10px">${a.priority}</span>${a.action} — <em>${a.responsible}</em></div>`).join('')}</div>`:''}
+    ${assignments.length?`<div style="margin-top:12px"><div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px">👷 الموظفون المكلفون حالياً</div>${assignments.map(a=>`<span style="background:var(--green3);color:var(--green2);padding:3px 10px;border-radius:6px;font-size:12px;display:inline-block;margin:2px">${a.employees?.full_name||'—'} — ${a.employees?.position||''}</span>`).join('')}</div>`:''}
+  `;
+
+  // Load employees for assignment
+  await loadEmployeesForAssignment(tid, assignments);
+  document.getElementById('adminTenderModal').classList.add('show');
+}
+
+async function loadEmployeesForAssignment(tid, currentAssignments){
+  const emps = await fetch(`${API}/employees/`,{headers:H}).then(r=>r.json()).catch(()=>[]);
+  const assignedIds = (currentAssignments||[]).map(a=>a.employee_id);
+  const container = document.getElementById('atm-emp-checkboxes');
+  if(!container)return;
+  if(!emps.length){container.innerHTML='<p style="font-size:12px;color:var(--muted)">لا يوجد موظفون</p>';return;}
+  container.innerHTML = emps.map(e=>`
+    <label style="display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:7px 12px;cursor:pointer;font-size:12px;">
+      <input type="checkbox" value="${e.id}" ${assignedIds.includes(e.id)?'checked':''} style="width:auto">
+      <strong>${e.full_name}</strong> — ${e.position||''} (${e.departments?.name||''})
+    </label>`).join('');
+}
+
+async function suggestEmployees(){
+  if(!currentAdminTender)return;
+  const btn=document.getElementById('suggestBtn');
+  btn.textContent='⏳ يحلل...';btn.disabled=true;
+  try{
+    const r=await fetch(`${API}/tenders/${currentAdminTender.id}/suggest-employees`,{headers:H});
+    const data=await r.json();
+    if(!r.ok){toast(data.detail||'خطأ','error');return;}
+    const box=document.getElementById('aiSuggestionsBox');
+    const list=document.getElementById('aiSuggestionsList');
+    const notes=document.getElementById('aiAssignNotes');
+    box.style.display='block';
+    notes.textContent=data.assignment_notes||'';
+    list.innerHTML=(data.suggestions||[]).map(s=>`
+      <div style="background:#fff;border-radius:8px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px;border:1px solid var(--border);">
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700;">${s.employee_name}</div>
+          <div style="font-size:11px;color:var(--muted)">${s.position} • ${s.department} • عبء العمل: ${s.current_workload} مناقصة</div>
+          <div style="font-size:12px;margin-top:4px"><strong>الدور:</strong> ${s.role_in_tender}</div>
+          <div style="font-size:12px;color:var(--muted)">${s.reason}</div>
+        </div>
+        <div style="text-align:center;flex-shrink:0">
+          <div style="font-size:18px;font-weight:900;font-family:var(--mono);color:${s.match_score>=70?'var(--green)':s.match_score>=50?'var(--yellow)':'var(--red)'}">${s.match_score}%</div>
+          <div style="font-size:9px;color:var(--muted)">${s.priority}</div>
+          <button class="btn btn-sm btn-green" style="margin-top:6px;font-size:10px" onclick="selectEmployee('${s.employee_id}')">اختر ✓</button>
+        </div>
+      </div>`).join('');
+    toast('تم الاقتراح ✅');
+  }catch(e){toast('تعذر الاقتراح','error');}
+  finally{btn.textContent='🤖 اقتراح ذكي بالـ AI';btn.disabled=false;}
+}
+
+function selectEmployee(empId){
+  const checkbox=document.querySelector(`#atm-emp-checkboxes input[value="${empId}"]`);
+  if(checkbox){checkbox.checked=true;toast('تم اختيار الموظف ✅');}
+}
+
+async function saveAssignment(){
+  if(!currentAdminTender){return;}
+  const checkboxes = document.querySelectorAll('#atm-emp-checkboxes input[type=checkbox]:checked');
+  const empIds = Array.from(checkboxes).map(c=>c.value);
+  const notes = document.getElementById('atm-assign-notes')?.value||'';
+  const r = await fetch(`${API}/tenders/${currentAdminTender.id}/assign-employees`,{
+    method:'POST',headers:H,
+    body:JSON.stringify({tender_id:currentAdminTender.id,employee_ids:empIds,notes})
+  });
+  const rs = await r.json();
+  if(!r.ok){toast(rs.detail||'خطأ','error');return;}
+  toast('تم حفظ التكليف ✅');
+  closeModal('adminTenderModal');
+  loadAdminTenders();
+}
+
+async function deleteTenderAdmin(){
+  if(!currentAdminTender||!confirm('حذف هذه المناقصة؟'))return;
+  await fetch(`${API}/tenders/${currentAdminTender.id}`,{method:'DELETE',headers:H});
+  toast('تم الحذف');closeModal('adminTenderModal');loadAdminTenders();
+}
+
+
+function downloadTenderPDF(){
+  const t=currentAdminTender;
+  if(!t){toast('لا يوجد تحليل','error');return;}
+  const fd=t.final_decision||{},ra=t.risk_analysis||{},ca=t.client_evaluation||{};
+  const doc=t.document_summary||{},legal=t.legal_analysis||{};
+  const fin=t.financial_analysis||{},tech=t.technical_analysis||{};
+  const st=t.strategy_analysis||{},hist=t.history_summary||{};
+  const vc=fd.verdict_color||'yellow';
+  const vColor={'green':'#22a34e','yellow':'#d97706','red':'#dc2626'}[vc]||'#d97706';
+  const vIco={'green':'✅','yellow':'⚠️','red':'❌'}[vc]||'⚠️';
+  const sc=(s)=>(s||0)>=70?'#22a34e':(s||0)>=45?'#d97706':'#dc2626';
+  const now=new Date().toLocaleDateString('ar-SA',{year:'numeric',month:'long',day:'numeric'});
+
+  const rows=(arr,fn)=>Array.isArray(arr)?arr.map(fn).join(''):'';
+
+  const html=[
+    '<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">',
+    '<title>تقرير — ',t.title||t.filename,'</title>',
+    '<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">',
+    '<style>',
+    '*{margin:0;padding:0;box-sizing:border-box;}',
+    'body{font-family:Tajawal,sans-serif;color:#0d1f14;background:#fff;font-size:13px;line-height:1.6;}',
+    '.pg{max-width:800px;margin:0 auto;padding:36px;}',
+    '.hdr{background:linear-gradient(135deg,#0d1f14,#1a3a20);color:#fff;padding:28px 32px;border-radius:14px;margin-bottom:22px;display:flex;justify-content:space-between;}',
+    '.logo{font-size:26px;font-weight:900;color:#fff;}',
+    '.sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px;}',
+    '.scard{background:#f8faf8;border:1px solid #dce8de;border-radius:10px;padding:12px;text-align:center;}',
+    '.agrow{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid #f0f4f0;}',
+    '.agbox{width:32px;height:32px;border-radius:8px;background:#eaf5ed;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}',
+    '.sectit{font-size:11px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:#6b7f6b;border-bottom:2px solid #dce8de;padding-bottom:5px;margin-bottom:10px;}',
+    '.stbox{background:#0d1f14;color:#fff;border-radius:12px;padding:18px 22px;margin-bottom:18px;}',
+    '.stg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}',
+    '.stst{background:rgba(255,255,255,.07);border-radius:8px;padding:10px;text-align:center;}',
+    '.stls{display:grid;grid-template-columns:1fr 1fr;gap:10px;}',
+    '.ftr{margin-top:28px;padding-top:14px;border-top:1px solid #dce8de;display:flex;justify-content:space-between;font-size:10px;color:#6b7f6b;}',
+    '@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact;}}',
+    '</style></head><body><div class="pg">',
+
+    '<div class="hdr">',
+    '<div><div class="logo" style="color:#fff">م<span style="color:#22a34e">ن</span>جز</div>',
+    '<div style="font-size:20px;font-weight:900;color:#fff;margin-top:12px">',t.title||t.filename,'</div>',
+    '<div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:3px">',t.pages||0,' صفحة - ',t.clients&&t.clients.company_name||'بدون عميل','</div></div>',
+    '<div style="text-align:left;font-size:11px;color:rgba(255,255,255,.45)"><div>تاريخ التحليل</div>',
+    '<div style="color:#fff;font-weight:700;margin-top:2px">',now,'</div></div></div>',
+
+    '<div style="border-radius:12px;padding:18px 22px;margin-bottom:18px;display:flex;align-items:center;gap:14px;border:2px solid ',vColor,'22;background:',vColor,'08">',
+    '<div style="font-size:32px;flex-shrink:0">',vIco,'</div>',
+    '<div style="flex:1"><div style="font-size:20px;font-weight:900;color:',vColor,'">',fd.decision_ar||'—','</div>',
+    '<div style="font-size:12px;color:#555;margin-top:3px">',fd.executive_summary||'','</div></div>',
+    '<div style="width:60px;height:60px;border-radius:50%;background:',vColor,'15;border:3px solid ',vColor,';display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:',vColor,'">',fd.overall_score||t.overall_score||0,'</div></div>',
+
+    '<div class="sgrid">',
+    '<div class="scard"><div style="font-size:24px;font-weight:900;color:',sc(t.overall_score||0),'">',t.overall_score||0,'</div><div style="font-size:10px;color:#6b7f6b;margin-top:2px">الدرجة الكلية</div></div>',
+    '<div class="scard"><div style="font-size:24px;font-weight:900;color:',sc(t.risk_score||0),'">',t.risk_score||0,'</div><div style="font-size:10px;color:#6b7f6b;margin-top:2px">المخاطر</div></div>',
+    '<div class="scard"><div style="font-size:24px;font-weight:900;color:',sc(t.fit_score||0),'">',t.fit_score||0,'</div><div style="font-size:10px;color:#6b7f6b;margin-top:2px">التوافق</div></div>',
+    '<div class="scard"><div style="font-size:24px;font-weight:900;color:',sc(legal.legal_score||0),'">',legal.legal_score||0,'</div><div style="font-size:10px;color:#6b7f6b;margin-top:2px">القانوني</div></div>',
+    '<div class="scard"><div style="font-size:24px;font-weight:900;color:',sc(fin.financial_score||0),'">',fin.financial_score||0,'</div><div style="font-size:10px;color:#6b7f6b;margin-top:2px">المالي</div></div>',
+    '<div class="scard"><div style="font-size:24px;font-weight:900;color:',sc(tech.technical_score||0),'">',tech.technical_score||0,'</div><div style="font-size:10px;color:#6b7f6b;margin-top:2px">التقني</div></div>',
+    '</div>',
+
+    st.bid_decision ? [
+      '<div class="stbox"><div style="font-size:13px;font-weight:800;color:#22a34e;margin-bottom:10px">🎯 Strategy Agent</div>',
+      '<div class="stg">',
+      '<div class="stst"><div style="font-size:15px;font-weight:900;color:#fff">',st.bid_decision,'</div><div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:2px">قرار الدخول</div></div>',
+      '<div class="stst"><div style="font-size:15px;font-weight:900;color:#22a34e">',st.win_probability||'—','</div><div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:2px">نسبة الفوز</div></div>',
+      '<div class="stst"><div style="font-size:15px;font-weight:900;color:#fff">',st.approach||'—','</div><div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:2px">طريقة الدخول</div></div>',
+      '</div>',
+      '<div style="background:rgba(34,163,78,.1);border-right:3px solid #22a34e;border-radius:6px;padding:9px 13px;font-size:11px;color:rgba(255,255,255,.8);line-height:1.7;margin-bottom:10px">',st.approach_description||'—','</div>',
+      st.suggested_price ? '<div style="margin-bottom:8px"><span style="background:rgba(255,255,255,.1);color:#fff;padding:2px 10px;border-radius:5px;font-size:11px">💰 السعر: '+st.suggested_price+'</span></div>' : '',
+      '<div class="stls">',
+      '<div><div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.3);margin-bottom:5px">المزايا</div>',
+      rows(st.competitive_advantages,a=>'<div style="font-size:10px;color:rgba(255,255,255,.6);padding:2px 0;border-bottom:1px solid rgba(255,255,255,.05)">• '+a+'</div>'),
+      '</div><div><div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.3);margin-bottom:5px">شروط الدخول</div>',
+      rows(st.key_conditions,c=>'<div style="font-size:10px;color:rgba(255,255,255,.6);padding:2px 0;border-bottom:1px solid rgba(255,255,255,.05)">• '+c+'</div>'),
+      '</div></div></div>'
+    ].join('') : '',
+
+    '<div style="margin-bottom:18px"><div class="sectit">تحليل الـ Agents</div>',
+    legal.summary ? '<div class="agrow"><div class="agbox">⚖️</div><div style="flex:1"><div style="font-size:12px;font-weight:800">Legal Agent</div><div style="font-size:11px;color:#444;margin-top:3px">'+legal.summary+'</div></div><div style="font-size:17px;font-weight:900;color:'+sc(legal.legal_score||0)+'">'+( legal.legal_score||0)+'</div></div>' : '',
+    fin.summary ? '<div class="agrow"><div class="agbox">💰</div><div style="flex:1"><div style="font-size:12px;font-weight:800">Financial — '+(fin.profitability_assessment||'')+'</div><div style="font-size:11px;color:#444;margin-top:3px">'+fin.summary+'</div></div><div style="font-size:17px;font-weight:900;color:'+sc(fin.financial_score||0)+'">'+(fin.financial_score||0)+'</div></div>' : '',
+    tech.summary ? '<div class="agrow"><div class="agbox">🔧</div><div style="flex:1"><div style="font-size:12px;font-weight:800">Technical Agent</div><div style="font-size:11px;color:#444;margin-top:3px">'+tech.summary+'</div></div><div style="font-size:17px;font-weight:900;color:'+sc(tech.technical_score||0)+'">'+(tech.technical_score||0)+'</div></div>' : '',
+    ra.summary ? '<div class="agrow"><div class="agbox">⚠️</div><div style="flex:1"><div style="font-size:12px;font-weight:800">Risk Agent — '+(ra.overall_risk_level||'')+'</div><div style="font-size:11px;color:#444;margin-top:3px">'+ra.summary+'</div></div><div style="font-size:17px;font-weight:900;color:'+sc(ra.risk_score||0)+'">'+(ra.risk_score||0)+'</div></div>' : '',
+    ca.reason ? '<div class="agrow"><div class="agbox">🎯</div><div style="flex:1"><div style="font-size:12px;font-weight:800">Client — '+(ca.recommendation||'')+'</div><div style="font-size:11px;color:#444;margin-top:3px">'+ca.reason+'</div></div><div style="font-size:17px;font-weight:900;color:'+sc(ca.fit_score||0)+'">'+(ca.fit_score||0)+'</div></div>' : '',
+    '</div>',
+
+    Array.isArray(ra.alerts)&&ra.alerts.length ? '<div style="margin-bottom:18px"><div class="sectit">التنبيهات</div>'+rows(ra.alerts,a=>'<div style="display:flex;gap:7px;align-items:center;padding:7px 0;border-bottom:1px solid #f0f4f0"><span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;white-space:nowrap;background:'+(a.level==='خطر'?'#fee2e2':a.level==='تحذير'?'#fef3c7':'#dbeafe')+';color:'+(a.level==='خطر'?'#dc2626':a.level==='تحذير'?'#92400e':'#2563eb')+'">'+a.level+'</span><span style="font-size:11px">'+a.message+'</span></div>')+'</div>' : '',
+
+    Array.isArray(doc.requirements)&&doc.requirements.length ? '<div style="margin-bottom:18px"><div class="sectit">المتطلبات</div>'+rows(doc.requirements.slice(0,10),r=>'<div style="display:flex;gap:7px;align-items:flex-start;padding:6px 0;border-bottom:1px solid #f0f4f0"><div style="width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:5px;background:'+(r.is_mandatory?'#dc2626':'#6b7f6b')+'"></div><div><div style="font-size:11px;font-weight:700">'+r.title+'</div><div style="font-size:10px;color:#6b7f6b">'+r.description+'</div></div></div>')+'</div>' : '',
+
+    Array.isArray(doc.deadlines)&&doc.deadlines.length ? '<div style="margin-bottom:18px"><div class="sectit">المواعيد</div>'+rows(doc.deadlines,d=>'<div style="display:flex;gap:7px;align-items:flex-start;padding:6px 0;border-bottom:1px solid #f0f4f0"><div style="width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:5px;background:'+(d.is_critical?'#dc2626':'#6b7f6b')+'"></div><div><div style="font-size:11px;font-weight:700">'+d.event+'</div><div style="font-size:10px;color:#6b7f6b">'+d.date_text+'</div></div></div>')+'</div>' : '',
+
+    Array.isArray(fd.action_items)&&fd.action_items.length ? '<div style="margin-bottom:18px"><div class="sectit">المهام</div>'+rows(fd.action_items,a=>'<div style="display:flex;gap:7px;align-items:center;padding:6px 0;border-bottom:1px solid #f0f4f0"><span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;background:#fef3c7;color:#92400e">'+a.priority+'</span><span style="font-size:11px"><strong>'+a.action+'</strong> — '+a.responsible+'</span></div>')+'</div>' : '',
+
+    Array.isArray(fd.questions_for_client)&&fd.questions_for_client.length ? '<div style="margin-bottom:18px"><div class="sectit">أسئلة الاستيضاح</div>'+rows(fd.questions_for_client,q=>'<div style="display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-bottom:1px solid #f0f4f0"><div style="width:20px;height:20px;border-radius:50%;background:#f0f4f0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;flex-shrink:0">'+q.number+'</div><div style="font-size:11px">'+q.question+'</div></div>')+'</div>' : '',
+
+    hist.archive_summary ? '<div style="margin-bottom:18px"><div class="sectit">الأرشيف</div><p style="font-size:11px;color:#444;line-height:1.7">'+hist.archive_summary+'</p></div>' : '',
+
+    fd.strategic_advice ? '<div style="background:#0d1f14;color:#fff;border-radius:10px;padding:14px 18px;margin-top:14px"><div style="font-size:11px;font-weight:700;color:#22a34e;margin-bottom:5px">النصيحة الاستراتيجية</div><div style="font-size:12px;line-height:1.7">'+fd.strategic_advice+'</div></div>' : '',
+
+    '<div class="ftr"><div>منجز Enterprise v3.0 — 10 Agents AI</div><div>',now,'</div></div>',
+    '</div></body></html>'
+  ].join('');
+
+  const win=window.open('','_blank');
+  win.document.write(html);
+  win.document.close();
+  win.onload=()=>setTimeout(()=>win.print(),600);
+}
+
+// ── WORKLOAD ──────────────────────────────────────────────
+async function loadWorkload(){
+  const [wl,depts]=await Promise.all([
+    fetch(`${API}/stats/workload`,{headers:H}).then(r=>r.json()).catch(()=>[]),
+    fetch(`${API}/departments/`,{headers:H}).then(r=>r.json()).catch(()=>[])
+  ]);
+  // Stats chips
+  const ws=document.getElementById('workloadStats');
+  const totalEmps=wl.reduce((s,d)=>s+d.employees,0);
+  const totalAssigned=wl.reduce((s,d)=>s+d.assigned_tenders,0);
+  if(ws) ws.innerHTML=`
+    <div class="stat-card"><div class="stat-top"><span class="stat-icon">🏢</span><span class="stat-badge sg">الأقسام</span></div><div class="stat-num">${wl.length}</div><div class="stat-label">أقسام نشطة</div></div>
+    <div class="stat-card"><div class="stat-top"><span class="stat-icon">👷</span><span class="stat-badge sb">الموظفون</span></div><div class="stat-num">${totalEmps}</div><div class="stat-label">إجمالي الموظفين</div></div>
+    <div class="stat-card"><div class="stat-top"><span class="stat-icon">📋</span><span class="stat-badge sy">التكليفات</span></div><div class="stat-num">${totalAssigned}</div><div class="stat-label">تكليفات نشطة</div></div>`;
+
+  // Department cards
+  const container=document.getElementById('workloadDepts');
+  if(!container)return;
+  if(!wl.length){container.innerHTML='<div class="empty-state"><span class="ei">🏢</span><p>لا توجد بيانات</p></div>';return;}
+  container.innerHTML=wl.map(dept=>{
+    const pct = dept.employees?Math.min(100,Math.round(dept.assigned_tenders/dept.employees*100)):0;
+    const color = pct>70?'var(--red)':pct>40?'var(--yellow)':'var(--green)';
+    return `<div class="card" style="margin-bottom:16px;">
+      <div class="card-header">
+        <h3>🏢 ${dept.department}</h3>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span class="td-muted">${dept.employees} موظف</span>
+          <span style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:12px;font-weight:700;color:${color}">${dept.assigned_tenders} تكليف</span>
+        </div>
+      </div>
+      <div style="padding:6px 16px 14px;">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">عبء العمل ${pct}%</div>
+        <div class="progress-wrap" style="height:6px;margin-bottom:0"><div class="progress-bar" style="width:${pct}%;background:${color}"></div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Fix showPage to include new pages
+const _origShowPage = showPage;
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const page=document.getElementById('page-'+name);
+  if(page)page.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>{if(n.getAttribute('onclick')===`showPage('${name}')`)n.classList.add('active');});
+  const loaders={overview:loadOverview,users:loadUsers,employees:loadEmployees,departments:loadDepartments,clients:loadClients,tenders:loadAdminTenders,workload:loadWorkload,activity:loadActivity,analyses:loadAdminTenders};
+  if(loaders[name])loaders[name]();
+}
+
+async function load(){
+  const me=await fetch(`${API}/auth/me`,{headers:H}).then(r=>r.json()).catch(()=>null);
+  if(!me||me.role!=='admin'){alert('صلاحيات غير كافية');localStorage.clear();window.location.href='/';}
+  const n=localStorage.getItem('munjaz_name')||me?.full_name||'المدير';
+  document.getElementById('adminName').textContent=n;
+  document.getElementById('adminInitial').textContent=n[0]||'م';
+  await Promise.all([loadDepts(),loadClients()]);
+  await loadOverview();
+}
 
 load();
 </script>
